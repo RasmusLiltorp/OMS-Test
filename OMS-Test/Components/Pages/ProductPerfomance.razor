@@ -105,9 +105,8 @@
 
     private void PerformSearch()
     {
-         hasSearched = true;
-         searchText = productId;
-
+        hasSearched = true;
+        searchText = productId;
         if (string.IsNullOrWhiteSpace(productId))
         {
             searchResults = new List<OrderLine>();
@@ -116,35 +115,26 @@
         
         var filteredOrders = orders
             .Where(orderLine => 
-                orderLine.ProductIDs.Any(pid => 
-                    pid.Contains(this.productId, StringComparison.OrdinalIgnoreCase)
+                orderLine.Products.Any(p => 
+                    p.ProductID.Contains(this.productId, StringComparison.OrdinalIgnoreCase)
                 )
             )
             .ToList();
 
+        // Apply date filters if set
         bool isFromDateSet = fromDate != default;
         bool isToDateSet = toDate != default;
-
         if (isFromDateSet || isToDateSet)
         {
             filteredOrders = filteredOrders.Where(o => 
             {
                 bool fromDateCondition = !isFromDateSet || o.OrderDate >= fromDate;
-                
                 bool toDateCondition = !isToDateSet || o.OrderDate <= toDate;
-                
                 return fromDateCondition && toDateCondition;
             }).ToList();
         }
-
-        // Update search results
-        searchResults = filteredOrders;
         
-        if (searchResults.Count == 0)
-        {
-            // No results found logic
-        }
-
+        searchResults = filteredOrders;
         StateHasChanged();
     }
 }

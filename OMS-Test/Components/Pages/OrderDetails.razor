@@ -37,7 +37,7 @@
          <div class="col-md-6">
              <h3>Products in Order</h3>
  
-             @if (order != null && order.ProductIDs.Any())
+             @if (order != null && order.Products.Any())
              {
                  <div class="card p-3" style="min-height: 200px;">
                      <table class="table">
@@ -45,19 +45,27 @@
                              <tr>
                                  <th>Product ID</th>
                                  <th>Product Name</th>
+                                 <th>Quantity</th>
                                  <th>Price</th>
+                                 <th>Total</th>
                              </tr>
                          </thead>
                          <tbody>
-                             @foreach (var productId in order.ProductIDs)
+                             @foreach (var orderProduct in order.Products)
                              {
-                                 var product = MockData.Products.FirstOrDefault(p => p.ProductID == productId);
+                                 var product = MockData.Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
                                  <tr>
-                                     <td>@productId</td>
+                                     <td>@orderProduct.ProductID</td>
                                      <td>@(product?.ProductName ?? "Unknown")</td>
+                                     <td>@orderProduct.Quantity</td>
                                      <td>@(product?.Price.ToString("0.00") ?? "0.00") DKK</td>
+                                     <td>@((product != null ? product.Price * orderProduct.Quantity : 0).ToString("0.00")) DKK</td>
                                  </tr>
                              }
+                             <tr class="table">
+                                 <td colspan="4" class="text-end"><strong>Order Total:</strong></td>
+                                 <td><strong>@(MockData.CalculateOrderTotal(order).ToString("0.00")) DKK</strong></td>
+                             </tr>
                          </tbody>
                      </table>
                  </div>
