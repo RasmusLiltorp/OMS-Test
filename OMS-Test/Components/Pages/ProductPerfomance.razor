@@ -1,5 +1,7 @@
 @page "/OMS/ProductPerformance"
 @using BlazorBootstrap
+@using OMS_Test.Services
+@inject MockDataService MockData
 @rendermode InteractiveServer
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -65,8 +67,8 @@
                     <tbody>
                         @foreach (var orderLine in searchResults)
                         {
-                            <tr>
-                                <td>@orderLine.OrderId</td>
+                            <tr style="cursor: pointer" @onclick="() => NavigateToOrderDetails(orderLine.OrderId)">
+                                <td><a href="/oms/order/@orderLine.OrderId">@orderLine.OrderId</a></td>
                                 <td>@orderLine.Customer</td>
                                 <td>@orderLine.OrderDate.ToString("yyyy-MM-dd")</td>
                             </tr>
@@ -80,6 +82,11 @@
 </div>
 
 @code {
+    @inject NavigationManager NavigationManager
+    private void NavigateToOrderDetails(int orderId)
+    {
+        NavigationManager.NavigateTo($"/oms/order/{orderId}");
+}
     private string? productId = null;
 
     private bool hasSearched = false;
@@ -92,8 +99,8 @@
 
     protected override void OnInitialized()
     {
-        orders = orderlines;
-        searchResults = orders.ToList();
+        orders = MockData.OrderLines;
+        searchResults = new List<OrderLine>();
     }
 
     private void PerformSearch()
@@ -106,10 +113,11 @@
             searchResults = new List<OrderLine>();
             return;
         }
+        
         var filteredOrders = orders
             .Where(orderLine => 
-                orderLine.ProductIDs.Any(productId => 
-                    productId.Contains(this.productId, StringComparison.OrdinalIgnoreCase)
+                orderLine.ProductIDs.Any(pid => 
+                    pid.Contains(this.productId, StringComparison.OrdinalIgnoreCase)
                 )
             )
             .ToList();
@@ -139,54 +147,4 @@
 
         StateHasChanged();
     }
-
-    private List<Product> GetProductsForOrder(OrderLine order)
-    {
-        return products.Where(p => order.ProductIDs.Contains(p.ProductID)).ToList();
-    }
-
-    private string GetProductName(string productId)
-    {
-        var product = products.FirstOrDefault(p => p.ProductID == productId);
-        return product?.ProductName;
-    }
-
-    public class Product
-    {
-        public required string ProductID { get; set; }
-        public required double Price { get; set; }
-        public required double Weight { get; set; }
-        public required string ProductName { get; set; }
-
-    }
-    public class OrderLine
-    {
-        public required string Customer {get; set;}
-        public required List<string> ProductIDs {get; set;}
-        public required int OrderId {get; set;}
-        public DateOnly OrderDate { get; set; }
-    }
-
-    // Mockup for products, orders & orderlines (temporary)
-    private List<Product> products = new List<Product>
-    {
-        new Product { ProductID = "1", Price = 100, Weight = 10, ProductName = "Phone" },
-        new Product { ProductID = "2", Price = 200, Weight = 20, ProductName = "Fridge" },
-        new Product { ProductID = "3", Price = 300, Weight = 30, ProductName = "Dishwasher" },
-        new Product { ProductID = "4", Price = 400, Weight = 40, ProductName = "TV" }   
-    };
-
-    private List<OrderLine> orderlines = new List<OrderLine>
-    {
-        new OrderLine { Customer = "John Doe", ProductIDs = new List<string> { "1", "2" }, OrderId = 1, OrderDate = new DateOnly(2025, 3, 1) },
-        new OrderLine { Customer = "Jane Doe", ProductIDs = new List<string> { "3", "4" }, OrderId = 2, OrderDate = new DateOnly(2025, 3, 5) },
-        new OrderLine { Customer = "James Bond", ProductIDs = new List<string> { "1", "2" }, OrderId = 3, OrderDate = new DateOnly(2025, 3, 10) },
-        new OrderLine { Customer = "Jason Bourne", ProductIDs = new List<string> { "3", "4" }, OrderId = 4, OrderDate = new DateOnly(2025, 3, 15) },
-        new OrderLine { Customer = "Fætter Guf", ProductIDs = new List<string> { "1", "2" }, OrderId = 5, OrderDate = new DateOnly(2025, 3, 20) },
-        new OrderLine { Customer = "Casper Holm Bach", ProductIDs = new List<string> { "3", "4" }, OrderId = 6, OrderDate = new DateOnly(2025, 3, 25) },
-        new OrderLine { Customer = "Tobias Hansen", ProductIDs = new List<string> { "1", "2" }, OrderId = 7, OrderDate = new DateOnly(2025, 3, 30) },
-        new OrderLine { Customer = "Karem Jahjah", ProductIDs = new List<string> { "3", "4" }, OrderId = 8, OrderDate = new DateOnly(2025, 3, 28) },
-        new OrderLine { Customer = "Lucas Barlach", ProductIDs = new List<string> { "1", "2" }, OrderId = 9, OrderDate = new DateOnly(2025, 3, 26) },
-        new OrderLine { Customer = "Mads Mikkelsen", ProductIDs = new List<string> { "3", "4" }, OrderId = 10, OrderDate = new DateOnly(2025, 3, 24) }
-    };
 }
