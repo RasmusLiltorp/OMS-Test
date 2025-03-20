@@ -1,9 +1,9 @@
-﻿@page "/" //remove later
-@page "/OMS"
+@page "/OMS/OrderHistory"
 @using BlazorBootstrap
 @rendermode InteractiveServer
+@inject NavigationManager Navigation
 
-<PageTitle>Order Management System</PageTitle>
+<PageTitle>Order history</PageTitle>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -13,7 +13,7 @@
 </div>
 
 <div class="container mt-4">
-    <h3>Order Management System</h3>
+    <h3>Order History</h3>
     <div class="row mt-4 justify-content-center">
         <div class="col-12">
             <div class="autocompletBox d-flex align-items-center">
@@ -57,13 +57,19 @@
                         <thead>
                             <tr>
                                 <th>Order ID</th>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Amount</th>
                             </tr>
                         </thead>            
                         <tbody>
                             @foreach (var order in searchResults)
                             {
-                                <tr>
+                                <tr @onclick="() => NavigateToOrderDetails(order.OrderId)" style="cursor: pointer;">
                                     <td>@order.OrderId</td>
+                                    <td>@order.Name</td>
+                                    <td>@order.Date.ToString("dd MMM yyyy")</td>
+                                    <td>@order.Amount</td>
                                 </tr>
                             }
                         </tbody>
@@ -74,6 +80,8 @@
     </div>
 </div>
 
+
+
 @code {
     private string searchText = string.Empty;
     private bool hasSearched = false;
@@ -82,12 +90,17 @@
     // Mockup for orders (temporary)
     private List<Order> orders = new List<Order>
     {
-        new Order { OrderId = "1" },
-        new Order { OrderId = "11" },
-        new Order { OrderId = "2" },
-        new Order { OrderId = "3" },
-        new Order { OrderId = "4" },
-        new Order { OrderId = "1111" }
+        new Order { OrderId = "1", Name = "Lucas Barlach", Date = new DateTime(2025, 2, 24), Amount = "128,95 kr", Products = new List<Product>
+            {
+                new Product { Name = "Iphone cover", Price = "99,95 kr", Quantity = 1 },
+                new Product { Name = "Iphone tempered glass", Price = "14,5 kr", Quantity = 2}
+            } 
+        },
+        new Order { OrderId = "11", Name = "Rasmus Liltorp", Date = new DateTime(2025, 2, 26), Amount = "1015 kr", Products = new List<Product>() },
+        new Order { OrderId = "2", Name = "Casper Holm Bach", Date = new DateTime(2025, 2, 12), Amount = "984,05 kr", Products = new List<Product>() },
+        new Order { OrderId = "3", Name = "Christian Olsgaard", Date = new DateTime(2025, 3, 4), Amount = "458,5 kr", Products = new List<Product>() },
+        new Order { OrderId = "4", Name = "Julius Konge", Date = new DateTime(2025, 1, 2), Amount = "14,5 kr", Products = new List<Product>() },
+        new Order { OrderId = "1111", Name = "Sofus Barlach", Date = new DateTime(2025, 2, 24), Amount = "128,95 kr", Products = new List<Product>() }
     };
 
     private void UpdateSearchText(string value)
@@ -156,9 +169,26 @@
 
         StateHasChanged();
     }
+
+    private void NavigateToOrderDetails(string orderId)
+    {
+        Navigation.NavigateTo($"/OMS/OrderHistory/{orderId}");
+    }
     
     public class Order
     {
         public required string OrderId { get; set; }
+        public required string Name { get; set; }
+        public required DateTime Date { get; set; }
+        public required string Amount { get; set; }
+        public List<Product> Products { get; set; }
     }
+
+    public class Product
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Price { get; set; }
+        public int Quantity { get; set; }
+    }
+
 }
