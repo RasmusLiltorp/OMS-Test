@@ -67,11 +67,12 @@
     </div>
 </div>
 
-@code {
-        private string? searchText = string.Empty;
-        private List<OrderLine>? orders;
+@code 
+{
+    private string? searchText = string.Empty;
+    private List<OrderLine>? orders;
 
-        protected override void OnInitialized()
+    protected override void OnInitialized()
     {
         orders = MockData.OrderLines;
     }
