@@ -1,6 +1,7 @@
-﻿@page "/" //remove later
-@page "/OMS"
+﻿@page "/OMS/Manage"
 @using BlazorBootstrap
+@using OMS_Test.Services
+@inject MockDataService MockData
 @rendermode InteractiveServer
 
 <PageTitle>Order Management System</PageTitle>
@@ -8,7 +9,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="topnav">
-  <a href="./OMS">OMS</a>
+  <a href="./OMS/Manage">OMS</a>
   <a href="./OMS/SalesReportsOverview">Sales Reports</a>
 </div>
 
@@ -18,7 +19,7 @@
         <div class="col-12">
             <div class="autocompletBox d-flex align-items-center">
                 <AutoComplete @bind-Value="searchText"
-                            TItem="Order"
+                            TItem="OrderLine"
                             DataProvider="OrdersDataProvider"
                             PropertyName="OrderId"
                             Placeholder="Search for an order ID..."
@@ -75,27 +76,32 @@
 </div>
 
 @code {
-    private string searchText = string.Empty;
+    private string? searchText = string.Empty;
+    private List<OrderLine>? orders;
     private bool hasSearched = false;
-    private List<Order> searchResults = new List<Order>();
+
+    private List<OrderLine> searchResults = new List<OrderLine>();
     
-    // Mockup for orders (temporary)
-    private List<Order> orders = new List<Order>
+    protected override void OnInitialized()
     {
-        new Order { OrderId = "1" },
-        new Order { OrderId = "11" },
-        new Order { OrderId = "2" },
-        new Order { OrderId = "3" },
-        new Order { OrderId = "4" },
-        new Order { OrderId = "1111" }
-    };
+        orders = MockData.OrderLines;
+        if (orders == null)
+        {
+            orders = new List<OrderLine>();
+        }
+        else
+        {
+            searchResults = orders.ToList();
+        }
+
+    }
 
     private void UpdateSearchText(string value)
     {
         searchText = value;    
     }
 
-    private async Task<AutoCompleteDataProviderResult<Order>> OrdersDataProvider(AutoCompleteDataProviderRequest<Order> request)
+    private async Task<AutoCompleteDataProviderResult<OrderLine>> OrdersDataProvider(AutoCompleteDataProviderRequest<OrderLine> request)
     {
         string? searchInput = null;
         await Task.Delay(1);
@@ -103,27 +109,25 @@
         {
             searchInput = request.Filter.Value.ToString();
             UpdateSearchText(searchInput);
-
-
         }
-      
-        var filteredOrders = string.IsNullOrEmpty(searchInput)
-            ? new List<Order>()
-            : orders.Where(o => o.OrderId.Contains(searchInput, StringComparison.OrdinalIgnoreCase)).ToList();
         
-        return new AutoCompleteDataProviderResult<Order> 
+        var filteredOrders = string.IsNullOrEmpty(searchInput)
+            ? new List<OrderLine>()
+            : orders?.Where(o => o.OrderId.ToString().Contains(searchInput, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<OrderLine>();
+        
+        return new AutoCompleteDataProviderResult<OrderLine> 
         { 
             Data = filteredOrders, 
-            TotalCount = filteredOrders.Count() 
+            TotalCount = filteredOrders.Count
         };
     }
 
     // Handle when an order is selected from autocomplete
-    private void OnOrderSelected(Order order)
+    private void OnOrderSelected(OrderLine order)
     {
         if (order != null)
         {
-            searchText = order.OrderId;
+            searchText = order.OrderId.ToString();
             PerformSearch();
         }
     }
@@ -144,21 +148,20 @@
             searchResults.Clear();
             return;
         }
-        
-        searchResults = orders.Where(o => o.OrderId.Equals(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
 
-        // If no exact match, search for partial matches
-        if (searchResults.Count == 0)
+        if (orders != null)
         {
-            searchResults = orders
-                .Where(o => o.OrderId.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
+            var filtered = orders
+                .Where(o => o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
+                searchResults = filtered;
+        }
+        else
+        {
+            searchResults = new List<OrderLine>();
+        }
+        
         StateHasChanged();
-    }
-    
-    public class Order
-    {
-        public required string OrderId { get; set; }
     }
 }
