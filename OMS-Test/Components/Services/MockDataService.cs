@@ -5,8 +5,8 @@ namespace OMS_Test.Services
 {
     public class MockDataService
     {
-        public List<Product> Products { get; private set; }
-        public List<OrderLine> OrderLines { get; private set; }
+        public List<Product>? Products { get; private set; }
+        public List<OrderLine>? OrderLines { get; private set; }
 
         public MockDataService()
         {
@@ -125,11 +125,19 @@ namespace OMS_Test.Services
 
         public List<Product> GetProductsForOrder(OrderLine order)
         {
+            if (Products == null)
+            {
+                return new List<Product>();
+            }
             return Products.Where(p => order.Products.Any(op => op.ProductID == p.ProductID)).ToList();
         }
 
         public decimal CalculateOrderTotal(OrderLine order)
         {
+            if(Products == null)
+            {
+                return 0;
+            }
             decimal total = 0;
             foreach (var orderProduct in order.Products)
             {
@@ -144,6 +152,10 @@ namespace OMS_Test.Services
         
         public decimal CalculateOrderWeight(OrderLine order)
         {
+            if (Products == null)
+            {
+                return 0;
+            }
             decimal weight = 0;
             foreach (var orderProduct in order.Products)
             {

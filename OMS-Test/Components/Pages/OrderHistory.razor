@@ -1,6 +1,8 @@
 @page "/OMS/OrderHistory"
 @using BlazorBootstrap
 @rendermode InteractiveServer
+@using OMS_Test.Services
+@inject MockDataService MockData
 @inject NavigationManager Navigation
 
 <PageTitle>Order history</PageTitle>
@@ -16,18 +18,10 @@
     <h3>Order History</h3>
     <div class="row mt-4 justify-content-center">
         <div class="col-12">
-            <div class="autocompletBox d-flex align-items-center">
-                <AutoComplete @bind-Value="searchText"
-                            TItem="Order"
-                            DataProvider="OrdersDataProvider"
-                            PropertyName="OrderId"
-                            Placeholder="Search for an order ID..."
-                            OnChanged="OnOrderSelected"
-                            @onkeypress="HandleKeyPress"
-                            class="form-control flex-grow-1" />
-                <button class="btn btn-outline-primary ms-1" type="button" @onclick="PerformSearch">
-                    <i class="bi bi-search"></i>
-                </button>
+            <div class="d-flex align-items-center">
+                <input type="text" @bind="searchText" @bind:event="oninput"
+                       class="form-control flex-grow-1"
+                       placeholder="Search for an order ID..." />
             </div>
         </div>
     </div>
@@ -37,14 +31,7 @@
                 <small class="mb-0">Quick search results</small>
             </div>
             <div class="card-body">
-                @if(hasSearched == false)
-                {
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-search" style="font-size: 3rem;"></i>
-                        <p class="mt-3">Enter an order ID and click search to view results</p>
-                    </div>
-                }
-                else if (searchResults.Count == 0)
+                @if (filteredOrders.Count == 0 && !string.IsNullOrWhiteSpace(searchText))
                 {
                     <div class="text-center text-muted py-5">
                         <i class="bi bi-emoji-frown" style="font-size: 3rem;"></i>
@@ -59,17 +46,17 @@
                                 <th>Order ID</th>
                                 <th>Name</th>
                                 <th>Date</th>
-                                <th>Amount</th>
+                                <th>Cost</th>
                             </tr>
                         </thead>            
                         <tbody>
-                            @foreach (var order in searchResults)
+                            @foreach (var order in filteredOrders)
                             {
-                                <tr @onclick="() => NavigateToOrderDetails(order.OrderId)" style="cursor: pointer;">
+                                <tr @onclick="() => NavigateToOrderDetails(order.OrderId.ToString())" style="cursor: pointer;">
                                     <td>@order.OrderId</td>
-                                    <td>@order.Name</td>
-                                    <td>@order.Date.ToString("dd MMM yyyy")</td>
-                                    <td>@order.Amount</td>
+                                    <td>@order.Customer</td>
+                                    <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
+                                    <td>@MockData.CalculateOrderTotal(order).ToString("0.00") DKK</td>
                                 </tr>
                             }
                         </tbody>
@@ -80,115 +67,22 @@
     </div>
 </div>
 
-
-
 @code {
-    private string searchText = string.Empty;
-    private bool hasSearched = false;
-    private List<Order> searchResults = new List<Order>();
-    
-    // Mockup for orders (temporary)
-    private List<Order> orders = new List<Order>
-    {
-        new Order { OrderId = "1", Name = "Lucas Barlach", Date = new DateTime(2025, 2, 24), Amount = "128,95 kr", Products = new List<Product>
-            {
-                new Product { Name = "Iphone cover", Price = "99,95 kr", Quantity = 1 },
-                new Product { Name = "Iphone tempered glass", Price = "14,5 kr", Quantity = 2}
-            } 
-        },
-        new Order { OrderId = "11", Name = "Rasmus Liltorp", Date = new DateTime(2025, 2, 26), Amount = "1015 kr", Products = new List<Product>() },
-        new Order { OrderId = "2", Name = "Casper Holm Bach", Date = new DateTime(2025, 2, 12), Amount = "984,05 kr", Products = new List<Product>() },
-        new Order { OrderId = "3", Name = "Christian Olsgaard", Date = new DateTime(2025, 3, 4), Amount = "458,5 kr", Products = new List<Product>() },
-        new Order { OrderId = "4", Name = "Julius Konge", Date = new DateTime(2025, 1, 2), Amount = "14,5 kr", Products = new List<Product>() },
-        new Order { OrderId = "1111", Name = "Sofus Barlach", Date = new DateTime(2025, 2, 24), Amount = "128,95 kr", Products = new List<Product>() }
-    };
+        private string? searchText = string.Empty;
+        private List<OrderLine>? orders;
 
-    private void UpdateSearchText(string value)
+        protected override void OnInitialized()
     {
-        searchText = value;    
+        orders = MockData.OrderLines;
     }
 
-    private async Task<AutoCompleteDataProviderResult<Order>> OrdersDataProvider(AutoCompleteDataProviderRequest<Order> request)
-    {
-        string searchInput = null;
-
-        if (request.Filter != null)
-        {
-            searchInput = request.Filter.Value.ToString();
-            UpdateSearchText(searchInput);
-
-
-        }
-      
-        var filteredOrders = string.IsNullOrEmpty(searchInput)
-            ? new List<Order>()
-            : orders.Where(o => o.OrderId.Contains(searchInput, StringComparison.OrdinalIgnoreCase)).ToList();
-        
-        return new AutoCompleteDataProviderResult<Order> 
-        { 
-            Data = filteredOrders, 
-            TotalCount = filteredOrders.Count() 
-        };
-    }
-
-    // Handle when an order is selected from autocomplete
-    private void OnOrderSelected(Order order)
-    {
-        if (order != null)
-        {
-            searchText = order.OrderId;
-            PerformSearch();
-        }
-    }
-    
-    private void HandleKeyPress(KeyboardEventArgs k)
-    {
-        if (k.Key == "Enter")
-        {
-            PerformSearch();
-        }
-    }
-
-    private void PerformSearch()
-    {
-        hasSearched = true;
-        if (string.IsNullOrEmpty(searchText))
-        {
-            searchResults.Clear();
-            return;
-        }
-        
-        searchResults = orders.Where(o => o.OrderId.Equals(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        // If no exact match, search for partial matches
-        if (searchResults.Count == 0)
-        {
-            searchResults = orders
-                .Where(o => o.OrderId.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
-
-        StateHasChanged();
-    }
+    private List<OrderLine> filteredOrders => orders?
+        .Where(o => string.IsNullOrWhiteSpace(searchText) || o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(o => o.OrderId)
+        .ToList();
 
     private void NavigateToOrderDetails(string orderId)
     {
-        Navigation.NavigateTo($"/OMS/OrderHistory/{orderId}");
+        Navigation.NavigateTo($"/OMS/Order/{orderId}");
     }
-    
-    public class Order
-    {
-        public required string OrderId { get; set; }
-        public required string Name { get; set; }
-        public required DateTime Date { get; set; }
-        public required string Amount { get; set; }
-        public List<Product> Products { get; set; }
-    }
-
-    public class Product
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Price { get; set; }
-        public int Quantity { get; set; }
-    }
-
 }

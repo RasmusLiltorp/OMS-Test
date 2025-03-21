@@ -53,7 +53,7 @@
                          <tbody>
                              @foreach (var orderProduct in order.Products)
                              {
-                                 var product = MockData.Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                                 var product = MockData.Products?.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
                                  <tr>
                                      <td>@orderProduct.ProductID</td>
                                      <td>@(product?.ProductName ?? "Unknown")</td>
@@ -89,6 +89,6 @@
 
     protected override void OnInitialized()
     {
-        order = MockData.OrderLines.FirstOrDefault(o => o.OrderId == OrderId);
+        order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
     }
 }
