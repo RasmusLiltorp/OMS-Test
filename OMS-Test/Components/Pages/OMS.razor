@@ -1,5 +1,4 @@
-﻿@page "/" //remove later
-@page "/OMS"
+﻿@page "/OMS/Manage"
 @using BlazorBootstrap
 @rendermode InteractiveServer
 
@@ -8,7 +7,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="topnav">
-  <a href="./OMS">OMS</a>
+  <a href="./OMS/Manage">OMS</a>
   <a href="./OMS/SalesReportsOverview">Sales Reports</a>
 </div>
 
@@ -106,7 +105,6 @@
 
 
         }
-      
         var filteredOrders = string.IsNullOrEmpty(searchInput)
             ? new List<Order>()
             : orders.Where(o => o.OrderId.Contains(searchInput, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -145,14 +143,7 @@
             return;
         }
         
-        searchResults = orders.Where(o => o.OrderId.Equals(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        // If no exact match, search for partial matches
-        if (searchResults.Count == 0)
-        {
-            searchResults = orders
-                .Where(o => o.OrderId.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
+        searchResults = orders.Where(o => o.OrderId.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
 
         StateHasChanged();
     }
