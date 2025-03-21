@@ -95,11 +95,18 @@
     private DateOnly fromDate = DateOnly.FromDateTime(DateTime.Now);
     private DateOnly toDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
     private List<OrderLine> searchResults = new List<OrderLine>();
-    private List<OrderLine> orders;
+    private List<OrderLine>? orders;
 
     protected override void OnInitialized()
     {
-            orders = MockData.OrderLines;
+            if(MockData.OrderLines != null)
+            {
+                orders = MockData.OrderLines;
+            }
+            else
+            {
+                orders = new List<OrderLine>();
+            }
             searchResults = new List<OrderLine>();
     }
 
@@ -113,7 +120,7 @@
             return;
         }
         
-        var filteredOrders = orders
+        var filteredOrders = orders?
             .Where(orderLine => 
                 orderLine.Products.Any(p => 
                     p.ProductID.Contains(this.productId, StringComparison.OrdinalIgnoreCase)
@@ -126,7 +133,7 @@
         bool isToDateSet = toDate != default;
         if (isFromDateSet || isToDateSet)
         {
-            filteredOrders = filteredOrders.Where(o => 
+            filteredOrders = filteredOrders?.Where(o => 
             {
                 bool fromDateCondition = !isFromDateSet || o.OrderDate >= fromDate;
                 bool toDateCondition = !isToDateSet || o.OrderDate <= toDate;
@@ -134,7 +141,7 @@
             }).ToList();
         }
         
-        searchResults = filteredOrders;
+        searchResults = filteredOrders ?? new List<OrderLine>();
         StateHasChanged();
     }
 }

@@ -79,7 +79,7 @@
     private List<OrderLine> filteredOrders => orders?
         .Where(o => string.IsNullOrWhiteSpace(searchText) || o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
         .OrderBy(o => o.OrderId)
-        .ToList();
+        .ToList() ?? new List<OrderLine>();
 
     private void NavigateToOrderDetails(string orderId)
     {

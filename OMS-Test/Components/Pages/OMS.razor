@@ -97,8 +97,8 @@
 
     private async Task<AutoCompleteDataProviderResult<Order>> OrdersDataProvider(AutoCompleteDataProviderRequest<Order> request)
     {
-        string searchInput = null;
-
+        string? searchInput = null;
+        await Task.Delay(1);
         if (request.Filter != null)
         {
             searchInput = request.Filter.Value.ToString();
