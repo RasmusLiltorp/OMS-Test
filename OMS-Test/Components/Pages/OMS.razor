@@ -21,8 +21,9 @@
                             TItem="Order"
                             DataProvider="OrdersDataProvider"
                             PropertyName="OrderId"
-                            Placeholder="Search for order-id..."
+                            Placeholder="Search for an order ID..."
                             OnChanged="OnOrderSelected"
+                            @onkeypress="HandleKeyPress"
                             class="form-control flex-grow-1" />
                 <button class="btn btn-outline-primary ms-1" type="button" @onclick="PerformSearch">
                     <i class="bi bi-search"></i>
@@ -127,6 +128,14 @@
         }
     }
     
+    private void HandleKeyPress(KeyboardEventArgs k)
+    {
+        if (k.Key == "Enter")
+        {
+            PerformSearch();
+        }
+    }
+
     private void PerformSearch()
     {
         hasSearched = true;

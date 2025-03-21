@@ -1,0 +1,94 @@
+@page "/oms/order/{OrderId:int}"
+@using BlazorBootstrap
+@using OMS_Test.Services
+@inject MockDataService MockData
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Order Details</PageTitle>
+
+<!-- Top navbar -->
+<div class="topnav">
+  <a href="../../OMS">OMS</a>
+  <a href="../OMS/SalesReportsOverview">Sales Reports</a>
+</div>
+
+<!-- Order Details -->
+<div class="container mt-4">
+     <div class="row">
+         <div class="col-md-6">
+             <h3>Order Details</h3>
+ 
+             @if (order != null)
+             {
+                 <div class="card p-3" style="min-height: 200px;">
+                     <p><strong>Order:</strong> @order.OrderId</p>
+                     <p><strong>Customer:</strong> @order.Customer</p>
+                     <p><strong>Date:</strong> @order.OrderDate.ToString("dd MMM yyyy")</p>
+                     <p><strong>Total Amount:</strong> @MockData.CalculateOrderTotal(order).ToString("0.00") DKK</p>
+                 </div>
+             }
+             else
+             {
+                 <p class="text-danger">Order not found!</p>
+             }
+         </div>
+ 
+         <div class="col-md-6">
+             <h3>Products in Order</h3>
+ 
+             @if (order != null && order.Products.Any())
+             {
+                 <div class="card p-3" style="min-height: 200px;">
+                     <table class="table">
+                         <thead>
+                             <tr>
+                                 <th>Product ID</th>
+                                 <th>Product Name</th>
+                                 <th>Quantity</th>
+                                 <th>Price</th>
+                                 <th>Total</th>
+                             </tr>
+                         </thead>
+                         <tbody>
+                             @foreach (var orderProduct in order.Products)
+                             {
+                                 var product = MockData.Products?.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                                 <tr>
+                                     <td>@orderProduct.ProductID</td>
+                                     <td>@(product?.ProductName ?? "Unknown")</td>
+                                     <td>@orderProduct.Quantity</td>
+                                     <td>@(product?.Price.ToString("0.00") ?? "0.00") DKK</td>
+                                     <td>@((product != null ? product.Price * orderProduct.Quantity : 0).ToString("0.00")) DKK</td>
+                                 </tr>
+                             }
+                             <tr class="table">
+                                 <td colspan="4" class="text-end"><strong>Order Total:</strong></td>
+                                 <td><strong>@(MockData.CalculateOrderTotal(order).ToString("0.00")) DKK</strong></td>
+                             </tr>
+                         </tbody>
+                     </table>
+                 </div>
+             }
+             else
+             {
+                 <strong>No products in this order.</strong>
+             }
+         </div>
+     </div>
+ </div>
+
+ @code {
+    [Parameter]
+    public int OrderId { get; set; }
+
+    private OrderLine? order;
+    
+    @inject MockDataService MockData
+    @inject NavigationManager NavigationManager
+
+    protected override void OnInitialized()
+    {
+        order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
+    }
+}
