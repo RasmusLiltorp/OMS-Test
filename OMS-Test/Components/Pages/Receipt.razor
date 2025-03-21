@@ -1,0 +1,50 @@
+@page "/receipt/{OrderId:int}"
+@using BlazorBootstrap
+@using OMS_Test.Services
+@inject MockDataService MockData
+
+<PageTitle>Receipt</PageTitle>
+
+
+<h3>Receipt</h3>
+<div class="container mt-4">
+    @if (order != null)
+    {
+        <div class="card p-3" style="min-height: 200px;">
+            <p><strong>Order-ID:</strong> @order.OrderId</p>
+            <p><strong>Name:</strong> @order.Customer</p>
+            <p><strong>Date of purchase:</strong> @order.OrderDate.ToString("dd MMM yyyy")</p>
+            <p><strong>Products:</strong></p>
+            <p>
+                @foreach (var orderProduct in order.Products)
+                {
+                    var product = MockData.Products?.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                    <tr>
+                        <td class="pe-4">@(product?.ProductName ?? "Unknown")</td>
+                        <td class="px-4 text-center">x @orderProduct.Quantity</td>
+                        <td class="ps-4 text-end">@((product != null ? product.Price * orderProduct.Quantity : 0).ToString("0.00")) DKK</td>
+                    </tr>
+                }
+            </p>
+            <p><strong>Total Amount:</strong> @MockData.CalculateOrderTotal(order).ToString("0.00") DKK</p>
+        </div>
+    }
+    else
+    {
+        <p class="text-danger">Receipt not found!</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int OrderId { get; set; }
+
+    @inject MockDataService MockData;  
+
+    private OrderLine? order;
+
+    protected override void OnInitialized()
+    {
+        order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
+    }
+}
