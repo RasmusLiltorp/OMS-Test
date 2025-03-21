@@ -17,11 +17,11 @@ namespace OMS_Test.Services
         {
             Products = new List<Product>
             {
-                new Product { ProductID = "1", ProductName = "Smartphone", Price = 4999.99m, Weight = 0.5m },
-                new Product { ProductID = "2", ProductName = "Laptop", Price = 7999.99m, Weight = 2.5m },
-                new Product { ProductID = "3", ProductName = "Headphones", Price = 399.99m, Weight = 0.3m },
-                new Product { ProductID = "4", ProductName = "Tablet", Price = 2999.99m, Weight = 0.8m },
-                new Product { ProductID = "5", ProductName = "Haribo Vingummibamser", Price = 19.99m, Weight = 0.2m },
+                new Product { ProductID = "1", ProductName = "Smartphone", Price = 4999.99m, Weight = 0.5m, Brand = "Apple", Category = "Phone" },
+                new Product { ProductID = "2", ProductName = "Laptop", Price = 7999.99m, Weight = 2.5m, Brand = "Samsung", Category = "Computer" },
+                new Product { ProductID = "3", ProductName = "Headphones", Price = 399.99m, Weight = 0.3m, Brand = "Sony", Category = "Audio" },
+                new Product { ProductID = "4", ProductName = "Tablet", Price = 2999.99m, Weight = 0.8m, Brand = "Apple", Category = "Tablet" },
+                new Product { ProductID = "5", ProductName = "Vingummibamser", Price = 19.99m, Weight = 0.2m, Brand = "Haribo", Category = "Candy" },
             };
 
             OrderLines = new List<OrderLine>
@@ -175,6 +175,8 @@ namespace OMS_Test.Services
         public required string ProductName { get; set; }
         public decimal Price { get; set; }
         public decimal Weight { get; set; }
+        public string? Brand { get; set; }
+        public string? Category { get; set; }
     }
 
     
