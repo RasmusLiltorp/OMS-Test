@@ -3,6 +3,8 @@
 @using OMS_Test.Services
 @inject MockDataService MockData
 @rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
 
 <PageTitle>Create Order</PageTitle>
 
@@ -53,6 +55,7 @@
 
     <div>
         <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="CancelOrder">Cancel</button>
     </div>
 </EditForm>
 
@@ -115,4 +118,9 @@
             }
         };
     }
+    private void CancelOrder()
+    {
+        NavigationManager.NavigateTo("/OMS/Manage");
+    }
+
 }

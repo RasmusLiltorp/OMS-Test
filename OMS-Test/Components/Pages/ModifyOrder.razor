@@ -3,6 +3,7 @@
 @inject MockDataService MockData
 @rendermode InteractiveServer
 @using BlazorBootstrap
+@inject NavigationManager NavigationManager
 
 <PageTitle>Modify Order</PageTitle>
 
@@ -71,6 +72,7 @@
 
         <div>
             <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-secondary ms-2" @onclick="CancelOrder">Cancel</button>
         </div>
     </EditForm>
 }
@@ -174,5 +176,11 @@
 
         showConfirmation = false;
     }
+
+    private void CancelOrder()
+    {
+        NavigationManager.NavigateTo("/OMS/Manage");
+    }
+
 
 }
