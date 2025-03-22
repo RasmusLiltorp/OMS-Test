@@ -249,7 +249,7 @@
             var orderToDelete = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == selectedDeleteOrderId.Value);
             if (orderToDelete != null)
             {
-                MockData.OrderLines.Remove(orderToDelete);
+                MockData.OrderLines?.Remove(orderToDelete);
                 searchResults.RemoveAll(o => o.OrderId == orderToDelete.OrderId);
                 deleteMessage = $"Order #{orderToDelete.OrderId} deleted successfully.";
                 selectedDeleteOrderId = null;
