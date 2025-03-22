@@ -139,6 +139,7 @@
 
     private List<OrderLine> searchResults = new List<OrderLine>();
     
+    
     protected override void OnInitialized()
     {
         orders = MockData.OrderLines;
@@ -226,11 +227,12 @@
     private string? deleteSearchText;
     private IEnumerable<OrderLine> FilteredDeleteOrders =>
     string.IsNullOrWhiteSpace(deleteSearchText)
-        ? MockData.OrderLines ?? Enumerable.Empty<OrderLine>()
-        : (MockData.OrderLines ?? Enumerable.Empty<OrderLine>())
+        ? orders!
+        : orders!
             .Where(o =>
                 o.OrderId.ToString().Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ||
-                o.Customer.Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase));
+                (o.Customer?.Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+
 
 
     private void ToggleDeleteMode()

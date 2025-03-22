@@ -5,8 +5,8 @@ namespace OMS_Test.Services
 {
     public class MockDataService
     {
-        public List<Product> Products { get; private set; }
-        public List<OrderLine> OrderLines { get; private set; }
+        public List<Product> Products { get; private set; } = new();
+        public List<OrderLine> OrderLines { get; private set; } = new();
 
         public MockDataService()
         {
