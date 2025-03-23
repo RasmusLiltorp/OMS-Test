@@ -227,11 +227,13 @@
     private string? deleteSearchText;
     private IEnumerable<OrderLine> FilteredDeleteOrders =>
     string.IsNullOrWhiteSpace(deleteSearchText)
-        ? orders!
+        ? orders!.Take(10)
         : orders!
             .Where(o =>
                 o.OrderId.ToString().Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ||
-                (o.Customer?.Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+                (o.Customer?.Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Take(10);
+
 
 
 

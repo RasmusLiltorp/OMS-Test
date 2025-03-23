@@ -29,7 +29,7 @@
                     {
                         <p>
                             <strong>Track:</strong>
-                            <a href="https://www.postnord.dk/track-trace?shipmentId=@order.TrackAndTrace" target="_blank">
+                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=@order.TrackAndTrace" target="_blank">
                                 @order.TrackAndTrace
                             </a>
                         </p>
@@ -70,8 +70,8 @@
                                     <td>@orderProduct.ProductID</td>
                                     <td>@(product?.ProductName ?? "Unknown")</td>
                                     <td>@orderProduct.Quantity</td>
-                                    <td>@(product?.Price.ToString("0.00") ?? "0.00") DKK</td>
-                                    <td>@((product != null ? product.Price * orderProduct.Quantity : 0).ToString("0.00")) DKK</td>
+                                    <td>@(orderProduct?.Price.ToString("0.00") ?? "0.00") DKK</td>
+                                    <td>@(orderProduct is not null ? (orderProduct.Price * orderProduct.Quantity).ToString("0.00") : "0.00") DKK</td>
                                 </tr>
                             }
                             <tr class="table">
