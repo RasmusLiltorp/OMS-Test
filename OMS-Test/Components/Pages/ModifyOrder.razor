@@ -50,8 +50,8 @@
         @foreach (var product in selectedOrder.Products)
         {
             <div class="mb-3 row">
-                <div class="col-6">
-                    <select class="form-select" @bind="product.ProductID">
+                <div class="col-4">
+                    <select class="form-select" value="@product.ProductID" @onchange="(e) => OnProductChanged(e, product)">
                         <option disabled selected value="">Select product</option>
                         @foreach (var p in MockData.Products)
                         {
@@ -59,13 +59,17 @@
                         }
                     </select>
                 </div>
-                <div class="col-4">
+                <div class="col-2">
                     <InputNumber class="form-control" @bind-Value="product.Quantity" min="1" />
+                </div>
+                <div class="col-3">
+                    <InputNumber class="form-control" @bind-Value="product.Price" step="0.01" />
                 </div>
                 <div class="col-2">
                     <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(product))">X</button>
                 </div>
             </div>
+
         }
 
         <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
@@ -104,7 +108,7 @@
                 OrderDate = original.OrderDate,
                 TrackAndTrace = original.TrackAndTrace,
                 Products = original.Products
-                    .Select(p => new OrderProduct { ProductID = p.ProductID, Quantity = p.Quantity })
+                    .Select(p => new OrderProduct { ProductID = p.ProductID, Quantity = p.Quantity, Price = p.Price })
                     .ToList()
             };
 
@@ -170,12 +174,31 @@
             OrderDate = original.OrderDate,
             TrackAndTrace = original.TrackAndTrace,
             Products = original.Products
-                .Select(p => new OrderProduct { ProductID = p.ProductID, Quantity = p.Quantity })
+                .Select(p => new OrderProduct { ProductID = p.ProductID, Quantity = p.Quantity, Price = p.Price })
                 .ToList()
         };
 
         showConfirmation = false;
     }
+
+    private void OnProductChanged(ChangeEventArgs e, OrderProduct product)
+    {
+        var newProductId = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(newProductId))
+        {
+            product.ProductID = newProductId;
+
+            if (product.Price == 0)
+            {
+                var selected = MockData.Products.FirstOrDefault(p => p.ProductID == newProductId);
+                if (selected != null)
+                {
+                    product.Price = selected.Price;
+                }
+            }
+        }
+    }
+
 
     private void CancelOrder()
     {

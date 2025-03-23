@@ -33,8 +33,8 @@
     @foreach (var item in newOrder.Products)
     {
         <div class="mb-3 row">
-            <div class="col-6">
-                <select class="form-select" @bind="item.ProductID">
+            <div class="col-4">
+                <select class="form-select" value="@item.ProductID" @onchange="(e) => OnProductChanged(e, item)">   
                     <option disabled selected value="">Select product</option>
                     @foreach (var product in MockData.Products)
                     {
@@ -42,8 +42,11 @@
                     }
                 </select>
             </div>
-            <div class="col-4">
+            <div class="col-2">
                 <InputNumber class="form-control" @bind-Value="item.Quantity" min="1" />
+            </div>
+            <div class="col-3">
+                <InputNumber class="form-control" @bind-Value="item.Price" step="0.01" />
             </div>
             <div class="col-2">
                 <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(item))">X</button>
@@ -114,10 +117,30 @@
             OrderDate = DateOnly.FromDateTime(DateTime.Today),
             Products = new List<OrderProduct> 
             {
-                new OrderProduct { ProductID = "", Quantity = 1 }
+                new OrderProduct { ProductID = "", Quantity = 1, Price = 0 }
             }
         };
     }
+
+    private void OnProductChanged(ChangeEventArgs e, OrderProduct product)
+    {
+        var newProductId = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(newProductId))
+        {
+            product.ProductID = newProductId;
+
+        // Set the price only if it’s not already set
+            if (product.Price == 0)
+            {
+                var selected = MockData.Products.FirstOrDefault(p => p.ProductID == newProductId);
+                if (selected != null)
+                {
+                    product.Price = selected.Price;
+                }
+            }
+        }
+    }
+
     private void CancelOrder()
     {
         NavigationManager.NavigateTo("/OMS/Manage");

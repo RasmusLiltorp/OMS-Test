@@ -8,6 +8,7 @@ namespace OMS_Test.Services
         public List<Product> Products { get; private set; } = new();
         public List<OrderLine> OrderLines { get; private set; } = new();
 
+
         public MockDataService()
         {
             InitializeData();
@@ -131,6 +132,21 @@ namespace OMS_Test.Services
                     TrackAndTrace = ""
                 }
             };
+
+            foreach (var order in OrderLines)
+            {
+                foreach (var orderProduct in order.Products)
+                {
+                    if (orderProduct.Price == 0)
+                    {
+                        var product = Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                        if (product != null)
+                        {
+                            orderProduct.Price = product.Price;
+                        }
+                    }
+                }
+            }
         }
 
         public List<Product> GetProductsForOrder(OrderLine order)
@@ -146,7 +162,7 @@ namespace OMS_Test.Services
                 var product = Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
                 if (product != null)
                 {
-                    total += product.Price * orderProduct.Quantity;
+                    total += orderProduct.Price * orderProduct.Quantity;
                 }
             }
             return total;
@@ -181,7 +197,8 @@ namespace OMS_Test.Services
     public class OrderProduct
     {
         public required string ProductID { get; set; }
-        public int Quantity { get; set; } = 1;
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
     }
 
     public class OrderLine
