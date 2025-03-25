@@ -3,6 +3,7 @@
 @using OMS_Test.Services
 @inject MockDataService MockData
 @rendermode InteractiveServer
+@inject NavigationManager Navigation
 
 <PageTitle>Order Management System</PageTitle>
 
@@ -30,15 +31,11 @@
                     <i class="bi bi-search"></i>
                 </button>
                 <div class="ms-auto">
-                    <button class="btn btn-outline bg-success text-white" type="button">
-                        <a href="./OMS/CreateOrder">
+                    <button class="btn btn-outline bg-success text-white" type="button" @onclick="CreateOrder">
                             <i class="bi bi-plus-lg"></i>
-                        </a>
                     </button>
-                    <button class="btn btn-outline bg-warning text-white" type="button">
-                        <a href="./OMS/ModifyOrder">
+                    <button class="btn btn-outline bg-warning text-white" type="button" @onclick="ModifyOrder">
                             <i class="bi bi-pencil-fill"></i>
-                        </a>
                     </button>
                     <button class="btn btn-outline bg-danger text-white" type="button" @onclick="OpenDeleteModal">
                         <i class="bi bi-dash-lg"></i>
@@ -274,6 +271,16 @@
         deleteSearchText = string.Empty;
         selectedDeleteOrderId = null;
         deleteMessage = null;
+    }
+
+    private void CreateOrder()
+    {
+        Navigation.NavigateTo("/OMS/CreateOrder");
+    }
+
+    private void ModifyOrder()
+    {
+        Navigation.NavigateTo("/OMS/ModifyOrder");
     }
 
 
