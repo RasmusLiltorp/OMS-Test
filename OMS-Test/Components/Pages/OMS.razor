@@ -71,14 +71,18 @@
                                     <td>@order.Customer</td>
                                     <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
                                     <td>@MockData.CalculateOrderTotal(order).ToString("0.00") DKK</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-success" @onclick="() => SendReceipt(order.OrderId)">
-                                            <i class="bi"></i> Send Receipt
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewReceipt(order.OrderId)">
-                                            <i class="bi"></i> See Receipt
-                                        </button>
+                                    <td colspan="2">
+                                        <div class="d-flex justify-content-end flex-column flex-md-row gap-1">
+                                            <button class="btn btn-sm btn-outline-success w-5" @onclick="() => SendReceipt(order.OrderId)">
+                                                <i class="bi"></i> Send Receipt
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary w-5" @onclick="() => ViewReceipt(order.OrderId)">
+                                                <i class="bi"></i> See Receipt
+                                            </button>
+                                        </div>
                                     </td>
+
+
                                 </tr>
                             }
                         </tbody>
