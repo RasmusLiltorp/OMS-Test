@@ -1,0 +1,149 @@
+@page "/OMS/CreateOrder"
+@using BlazorBootstrap
+@using OMS_Test.Services
+@inject MockDataService MockData
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Create Order</PageTitle>
+
+<div class="topnav">
+  <a href="./OMS/Manage">OMS</a>
+  <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+</div>
+
+<h3>Create New Order</h3>
+
+<EditForm Model="@newOrder" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Customer Name</label>
+        <InputText class="form-control" @bind-Value="newOrder.Customer" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Order Date</label>
+        <InputDate class="form-control" @bind-Value="newOrder.OrderDate" />
+    </div>
+
+    <h5>Products</h5>
+    @foreach (var item in newOrder.Products)
+    {
+        <div class="mb-3 row">
+            <div class="col-4">
+                <select class="form-select" value="@item.ProductID" @onchange="(e) => OnProductChanged(e, item)">   
+                    <option disabled selected value="">Select product</option>
+                    @foreach (var product in MockData.Products)
+                    {
+                        <option value="@product.ProductID">@product.ProductName (@product.Price.ToString("C"))</option>
+                    }
+                </select>
+            </div>
+            <div class="col-2">
+                <InputNumber class="form-control" @bind-Value="item.Quantity" min="1" />
+            </div>
+            <div class="col-3">
+                <InputNumber class="form-control" @bind-Value="item.Price" step="0.01" />
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(item))">X</button>
+            </div>
+        </div>
+    }
+
+    <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="CancelOrder">Cancel</button>
+    </div>
+</EditForm>
+
+@if (showConfirmation)
+{
+    <div class="alert alert-success mt-3">Order created successfully!</div>
+}
+
+@code {
+    private OrderLine newOrder = new OrderLine
+    {
+        OrderId = 0,
+        Customer = string.Empty,
+        OrderDate = DateOnly.FromDateTime(DateTime.Today),
+        Products = new List<OrderProduct> 
+        {    
+            new OrderProduct { ProductID = "", Quantity = 1 } 
+        }
+    };
+
+    private bool showConfirmation = false;
+
+    private void AddProduct()
+    {
+        newOrder.Products ??= new List<OrderProduct>();
+        newOrder.Products.Add(new OrderProduct { ProductID = "", Quantity = 1 });
+    }
+
+    private void RemoveProduct(OrderProduct product)
+    {
+        newOrder.Products.Remove(product);
+    }
+
+    private void HandleValidSubmit()
+    {
+        newOrder.OrderId = MockData.OrderLines.Count + 1;
+
+        var cleanProducts = newOrder.Products
+            .Where(p => !string.IsNullOrWhiteSpace(p.ProductID) && p.Quantity > 0)
+            .ToList();
+
+        MockData.OrderLines.Add(new OrderLine
+        {
+            OrderId = newOrder.OrderId,
+            Customer = newOrder.Customer,
+            OrderDate = newOrder.OrderDate,
+            Products = cleanProducts
+        });
+
+        showConfirmation = true;
+
+        newOrder = new OrderLine
+        {
+            OrderId = 0,
+            Customer = "",
+            OrderDate = DateOnly.FromDateTime(DateTime.Today),
+            Products = new List<OrderProduct> 
+            {
+                new OrderProduct { ProductID = "", Quantity = 1, Price = 0 }
+            }
+        };
+    }
+
+    private void OnProductChanged(ChangeEventArgs e, OrderProduct product)
+    {
+        var newProductId = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(newProductId))
+        {
+            product.ProductID = newProductId;
+
+        // Set the price only if it’s not already set
+            if (product.Price == 0)
+            {
+                var selected = MockData.Products.FirstOrDefault(p => p.ProductID == newProductId);
+                if (selected != null)
+                {
+                    product.Price = selected.Price;
+                }
+            }
+        }
+    }
+
+    private void CancelOrder()
+    {
+        NavigationManager.NavigateTo("/OMS/Manage");
+    }
+
+}
