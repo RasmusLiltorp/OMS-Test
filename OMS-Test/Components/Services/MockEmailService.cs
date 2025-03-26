@@ -15,7 +15,10 @@ namespace OMS_Test.Services
 
         public async Task SendOrderReceiptAsync(OrderLine order)
         {
-            if (string.IsNullOrWhiteSpace("Lucasbarlach@gmail.com"))
+            /*if (string.IsNullOrWhiteSpace(order.CustomerEmail))
+            throw new InvalidOperationException("No customer email provided.");*/
+
+            if (string.IsNullOrWhiteSpace("juliuslavekonge@gmail.com"))
                 throw new InvalidOperationException("No customer email provided.");
 
             var sb = new StringBuilder();
@@ -91,7 +94,8 @@ namespace OMS_Test.Services
             sb.AppendLine("</div></body></html>");
 
             var mail = new MailMessage();
-            mail.From = new MailAddress("yourcompany@example.com", "Arnes Elektronik");
+            mail.From = new MailAddress("ArnesElektronik@gmail.com", "Arnes Elektronik");
+            /*mail.To.Add(order.CustomerEmail);*/
             mail.To.Add("lucasbarlach@gmail.com");
             mail.Subject = $"Receipt for Order #{order.OrderId}";
             mail.Body = sb.ToString();
@@ -99,7 +103,7 @@ namespace OMS_Test.Services
 
             using var smtp = new SmtpClient("smtp.gmail.com", 587)
             {
-                Credentials = new NetworkCredential("lucasbarlach@gmail.com", "rjzb sahu hagj oapu"),
+                Credentials = new NetworkCredential("ArnesElektronik@gmail.com", "eclb mljs yant oxzn"),
                 EnableSsl = true
             };
 
