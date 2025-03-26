@@ -27,7 +27,7 @@ namespace OMS_Test.Services
             sb.AppendLine("<div style='max-width: 700px; margin: auto; padding: 20px; border: 1px solid #eee;'>");
 
             sb.AppendLine("<h2 style='color: #444;'>Arnes Elektronik</h2>");
-            sb.AppendLine("<p>Elektronikvej 12, 5200 Odense<br>arnes@elektronik.dk<br>+45 12 34 56 78</p>");
+            sb.AppendLine("<p>Campusvej 55, 5230 Odense<br>arnes@elektronik.dk<br>+45 12 34 56 78</p>");
             
             sb.AppendLine("<hr style='margin: 20px 0;'>");
 
