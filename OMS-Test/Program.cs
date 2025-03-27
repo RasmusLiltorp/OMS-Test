@@ -10,12 +10,15 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 //add mockdata
-builder.Services.AddScoped<MockDataService>();
+builder.Services.AddSingleton<MockDataService>();
 // Add circuit options configuration
 builder.Services.AddServerSideBlazor(options =>
 {
     options.DetailedErrors = true; // Only in development
 });
+
+builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
+
 
 // Add Blazor Bootstrap
 builder.Services.AddBlazorBootstrap();

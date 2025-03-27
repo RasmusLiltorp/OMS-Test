@@ -57,10 +57,45 @@
     <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
 
     <div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="button" class="btn btn-secondary mb-3 bg-success" @onclick="OpenSendPaymentModal">Send payment</button>
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-primary" disabled="@(paymentLinkSent == false)">Submit</button>
         <button type="button" class="btn btn-secondary ms-2" @onclick="CancelOrder">Cancel</button>
     </div>
 </EditForm>
+
+@if (showSendPaymentModal)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Payment Link</h5>
+                    <button type="button" class="btn-close" @onclick="CloseSendPaymentModal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Email or Phone Number</label>
+                    <input class="form-control" @bind="paymentRecipient" placeholder="Enter email or phone..." />
+
+                    @if (!string.IsNullOrEmpty(paymentMessage))
+                    {
+                        <div class="alert alert-success mt-3">@paymentMessage</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseSendPaymentModal">Cancel</button>
+                    <button class="btn btn-success" @onclick="SendPaymentLink" disabled="@string.IsNullOrWhiteSpace(paymentRecipient)">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+
 
 @if (showConfirmation)
 {
@@ -68,6 +103,13 @@
 }
 
 @code {
+
+    private bool showSendPaymentModal = false;
+    private string paymentRecipient = string.Empty;
+    private string paymentMessage = string.Empty;
+    private bool paymentLinkSent = false;
+
+
     private OrderLine newOrder = new OrderLine
     {
         OrderId = 0,
@@ -120,6 +162,8 @@
                 new OrderProduct { ProductID = "", Quantity = 1, Price = 0 }
             }
         };
+        paymentLinkSent = false;
+
     }
 
     private void OnProductChanged(ChangeEventArgs e, OrderProduct product)
@@ -129,7 +173,6 @@
         {
             product.ProductID = newProductId;
 
-        // Set the price only if it’s not already set
             if (product.Price == 0)
             {
                 var selected = MockData.Products.FirstOrDefault(p => p.ProductID == newProductId);
@@ -145,5 +188,28 @@
     {
         NavigationManager.NavigateTo("/OMS/Manage");
     }
+
+    private void OpenSendPaymentModal()
+    {
+        paymentRecipient = string.Empty;
+        paymentMessage = string.Empty;
+        showSendPaymentModal = true;
+    }
+
+    private void CloseSendPaymentModal()
+    {
+        showSendPaymentModal = false;
+    }
+
+    private void SendPaymentLink()
+    {
+        if (!string.IsNullOrWhiteSpace(paymentRecipient))
+        {
+            paymentMessage = $"Payment link sent to {paymentRecipient}";
+            paymentLinkSent = true;
+        }
+    }
+
+
 
 }
