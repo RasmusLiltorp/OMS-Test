@@ -46,7 +46,14 @@
                                     <h5 class="font-size-16 mb-3">Billed To:</h5>
                                     <h5 class="font-size-15 mb-2">@order?.Customer</h5>
                                     <p class="mb-1">Unknown Adress</p>
-                                    <p class="mb-1">Customer@mail.com</p>
+                                    @if (!string.IsNullOrWhiteSpace(order?.Email))
+                                    {
+                                        <p>@order.Email</p>
+                                    }
+                                    else
+                                    {
+                                        <p>Unknown Email</p>
+                                    }
                                     <p>+45 87 65 43 21</p>
                                 </div>
                             </div>

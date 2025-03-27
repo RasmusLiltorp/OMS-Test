@@ -24,6 +24,17 @@
                     <p><strong>Order:</strong> @order.OrderId</p>
                     <p><strong>Customer:</strong> @order.Customer</p>
                     <p><strong>Date:</strong> @order.OrderDate.ToString("dd MMM yyyy")</p>
+                    @if (!string.IsNullOrWhiteSpace(order.Email))
+                    {
+                        <p>
+                            <strong>Email:</strong>
+                            @order.Email
+                        </p>
+                    }
+                    else
+                    {
+                        <p><strong>Email:</strong> No Email provided</p>
+                    }
                     <p><strong>Total Amount:</strong> @MockData.CalculateOrderTotal(order).ToString("0.00") DKK</p>
 
                     @if (!string.IsNullOrWhiteSpace(order.TrackAndTrace))
