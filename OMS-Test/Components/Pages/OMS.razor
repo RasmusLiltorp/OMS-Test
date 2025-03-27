@@ -39,6 +39,14 @@
         </div>
     </div>
 
+    @if (!string.IsNullOrEmpty(sendMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            @sendMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="() => sendMessage = null"></button>
+        </div>
+    }
+
     <div class="mt-4">
         <div class="card">
             <div class="card-header bg-light">
@@ -81,8 +89,8 @@
                                                 <i class="bi"></i> See Receipt
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </td>                                    
+                                </tr>                                
                             }
                         </tbody>
                     </table>
@@ -138,13 +146,6 @@
             }
         </div>
     </div>
-    @if (!string.IsNullOrEmpty(sendMessage))
-    {
-        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-            @sendMessage
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="() => sendMessage = null"></button>
-        </div>
-    }
 </div>
 
 @code {
