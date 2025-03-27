@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using DTOs;
 
 namespace OMS_Test.Services
 {
@@ -15,12 +16,12 @@ namespace OMS_Test.Services
 
         public async Task SendOrderReceiptAsync(OrderLine order)
         {
-            /*if (string.IsNullOrWhiteSpace(order.CustomerEmail))
-            throw new InvalidOperationException("No customer email provided.");*/
-
-            if (string.IsNullOrWhiteSpace("juliuslavekonge@gmail.com"))
-                throw new InvalidOperationException("No customer email provided.");
-
+            if (order.Email == null)
+            {
+                Console.WriteLine("No customer email provided.");
+                return;
+            }
+            
             var sb = new StringBuilder();
             var total = _mockData.CalculateOrderTotal(order);
 
@@ -95,8 +96,7 @@ namespace OMS_Test.Services
 
             var mail = new MailMessage();
             mail.From = new MailAddress("ArnesElektronik@gmail.com", "Arnes Elektronik");
-            /*mail.To.Add(order.CustomerEmail);*/
-            mail.To.Add("lucasbarlach@gmail.com");
+            mail.To.Add(order.Email);
             mail.Subject = $"Receipt for Order #{order.OrderId}";
             mail.Body = sb.ToString();
             mail.IsBodyHtml = true;
