@@ -132,12 +132,16 @@
         // Apply date filters if set
         bool isFromDateSet = fromDate != default;
         bool isToDateSet = toDate != default;
+        
         if (isFromDateSet || isToDateSet)
         {
             filteredOrders = filteredOrders?.Where(o => 
             {
-                bool fromDateCondition = !isFromDateSet || o.OrderDate >= fromDate;
-                bool toDateCondition = !isToDateSet || o.OrderDate <= toDate;
+                // Convert DateTime to DateOnly
+                var orderDateOnly = DateOnly.FromDateTime(o.OrderDate);
+                
+                bool fromDateCondition = !isFromDateSet || orderDateOnly >= fromDate;
+                bool toDateCondition = !isToDateSet || orderDateOnly <= toDate;
                 return fromDateCondition && toDateCondition;
             }).ToList();
         }

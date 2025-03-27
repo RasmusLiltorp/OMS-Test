@@ -13,7 +13,7 @@ namespace DTOs
         public string Email { get; set; }
         public required List<OrderProduct> Products { get; set; }
         public required int OrderId { get; set; }
-        public DateOnly OrderDate { get; set; }
+        public DateTime OrderDate { get; set; }
         public string? TrackAndTrace { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using OMS_Test.Components;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.Extensions.DependencyInjection;
 using OMS_Test.Services;
+using OMS_Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,15 +11,19 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 //add mockdata
-builder.Services.AddSingleton<MockDataService>();
+builder.Services.AddScoped<MockDataService>();
 // Add circuit options configuration
 builder.Services.AddServerSideBlazor(options =>
 {
     options.DetailedErrors = true; // Only in development
 });
 
-builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
+builder.Services.AddHttpClient<ApiService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:4300/");
+});
 
 // Add Blazor Bootstrap
 builder.Services.AddBlazorBootstrap();

@@ -34,7 +34,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "2", Quantity = 2 }
                     }, 
                     OrderId = 1, 
-                    OrderDate = new DateOnly(2025, 3, 1),
+                    OrderDate = new DateTime(2025, 3, 1),
                     TrackAndTrace = "123456789"
                 },
                 new OrderLine { 
@@ -44,7 +44,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "4", Quantity = 1 }
                     }, 
                     OrderId = 2, 
-                    OrderDate = new DateOnly(2025, 3, 5),
+                    OrderDate = new DateTime(2025, 3, 5),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -54,7 +54,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "2", Quantity = 1 }
                     }, 
                     OrderId = 3, 
-                    OrderDate = new DateOnly(2025, 3, 10),
+                    OrderDate = new DateTime(2025, 3, 10),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -64,7 +64,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "4", Quantity = 1 }
                     }, 
                     OrderId = 4, 
-                    OrderDate = new DateOnly(2025, 3, 15),
+                    OrderDate = new DateTime(2025, 3, 15),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -76,7 +76,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "5", Quantity = 25 }
                     }, 
                     OrderId = 5, 
-                    OrderDate = new DateOnly(2025, 3, 20),
+                    OrderDate = new DateTime(2025, 3, 20),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -88,7 +88,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "1", Quantity = 3 }
                     }, 
                     OrderId = 6, 
-                    OrderDate = new DateOnly(2025, 3, 25),
+                    OrderDate = new DateTime(2025, 3, 25),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -98,7 +98,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "2", Quantity = 2 }
                     }, 
                     OrderId = 7, 
-                    OrderDate = new DateOnly(2025, 3, 30),
+                    OrderDate = new DateTime(2025, 3, 30),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -108,7 +108,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "4", Quantity = 2 }
                     }, 
                     OrderId = 8, 
-                    OrderDate = new DateOnly(2025, 3, 28),
+                    OrderDate = new DateTime(2025, 3, 28),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -118,7 +118,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "2", Quantity = 1 }
                     }, 
                     OrderId = 9, 
-                    OrderDate = new DateOnly(2025, 3, 26),
+                    OrderDate = new DateTime(2025, 3, 26),
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -128,7 +128,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "4", Quantity = 1 }
                     }, 
                     OrderId = 10, 
-                    OrderDate = new DateOnly(2025, 3, 24),
+                    OrderDate = new DateTime(2025, 3, 24),
                     TrackAndTrace = ""
                 }
             };

@@ -115,7 +115,7 @@
     {
         OrderId = 0,
         Customer = string.Empty,
-        OrderDate = DateOnly.FromDateTime(DateTime.Today),
+        OrderDate = DateTime.Today,
         Products = new List<OrderProduct> 
         {    
             new OrderProduct { ProductID = "", Quantity = 1 } 
@@ -157,7 +157,7 @@
         {
             OrderId = 0,
             Customer = "",
-            OrderDate = DateOnly.FromDateTime(DateTime.Today),
+            OrderDate = DateTime.Today,
             Products = new List<OrderProduct> 
             {
                 new OrderProduct { ProductID = "", Quantity = 1, Price = 0 }
