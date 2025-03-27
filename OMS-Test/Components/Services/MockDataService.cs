@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
+using DTOs;
 
 namespace OMS_Test.Services
 {
     public class MockDataService
     {
-        public List<Product> Products { get; private set; } = new();
+        public List<ProductDTO> Products { get; private set; } = new();
         public List<OrderLine> OrderLines { get; private set; } = new();
-
 
         public MockDataService()
         {
@@ -16,13 +16,13 @@ namespace OMS_Test.Services
 
         private void InitializeData()
         {
-            Products = new List<Product>
+            Products = new List<ProductDTO>
             {
-                new Product { ProductID = "1", ProductName = "Smartphone", Price = 4999.99m, Weight = 0.5m },
-                new Product { ProductID = "2", ProductName = "Laptop", Price = 7999.99m, Weight = 2.5m },
-                new Product { ProductID = "3", ProductName = "Headphones", Price = 399.99m, Weight = 0.3m },
-                new Product { ProductID = "4", ProductName = "Tablet", Price = 2999.99m, Weight = 0.8m },
-                new Product { ProductID = "5", ProductName = "Haribo Vingummibamser", Price = 19.99m, Weight = 0.2m },
+                new ProductDTO { ProductID = "1", ProductName = "Smartphone", Price = 4999.99m, Weight = 0.5m },
+                new ProductDTO { ProductID = "2", ProductName = "Laptop", Price = 7999.99m, Weight = 2.5m },
+                new ProductDTO { ProductID = "3", ProductName = "Headphones", Price = 399.99m, Weight = 0.3m },
+                new ProductDTO { ProductID = "4", ProductName = "Tablet", Price = 2999.99m, Weight = 0.8m },
+                new ProductDTO { ProductID = "5", ProductName = "Haribo Vingummibamser", Price = 19.99m, Weight = 0.2m },
             };
 
             OrderLines = new List<OrderLine>
@@ -149,7 +149,7 @@ namespace OMS_Test.Services
             }
         }
 
-        public List<Product> GetProductsForOrder(OrderLine order)
+        public List<ProductDTO> GetProductsForOrder(OrderLine order)
         {
             return Products.Where(p => order.Products.Any(op => op.ProductID == p.ProductID)).ToList();
         }
@@ -181,33 +181,5 @@ namespace OMS_Test.Services
             }
             return weight;
         }
-    }
-
-
-
-    public class Product
-    {
-        public required string ProductID { get; set; }
-        public required string ProductName { get; set; }
-        public decimal Price { get; set; }
-        public decimal Weight { get; set; }
-    }
-
-    
-    public class OrderProduct
-    {
-        public required string ProductID { get; set; }
-        public int Quantity { get; set; }
-        public decimal Price { get; set; }
-    }
-
-    public class OrderLine
-    {
-        public required string Customer { get; set; }
-        public required List<OrderProduct> Products { get; set; }
-        public required int OrderId { get; set; }
-        public DateOnly OrderDate { get; set; }
-        public string? TrackAndTrace { get; set; } 
-
     }
 }
