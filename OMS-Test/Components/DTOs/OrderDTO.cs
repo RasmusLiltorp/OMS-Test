@@ -10,6 +10,7 @@ namespace DTOs
     public class OrderLine
     {
         public required string Customer { get; set; }
+        public string Email { get; set; }
         public required List<OrderProduct> Products { get; set; }
         public required int OrderId { get; set; }
         public DateOnly OrderDate { get; set; }
