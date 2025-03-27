@@ -40,6 +40,14 @@
         </div>
     </div>
 
+    @if (!string.IsNullOrEmpty(sendMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            @sendMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" @onclick="() => sendMessage = null"></button>
+        </div>
+    }
+
     <div class="mt-4">
         <div class="card">
             <div class="card-header bg-light">
@@ -82,8 +90,8 @@
                                                 <i class="bi"></i> See Receipt
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </td>                                    
+                                </tr>                                
                             }
                         </tbody>
                     </table>
@@ -147,6 +155,8 @@
 
     private int currentPage = 1;
     private int pageSize = 10;
+
+    private string? sendMessage;
 
     protected override void OnInitialized()
     {
@@ -261,6 +271,11 @@
         if (order != null)
         {
             await EmailService.SendOrderReceiptAsync(order);
+            sendMessage = $"Receipt for Order #{order.OrderId} has been sent.";
+            StateHasChanged();
+            await Task.Delay(3000); // Optional: auto-hide after 3 sec
+            sendMessage = null;
+            StateHasChanged();
         }
     }
 
