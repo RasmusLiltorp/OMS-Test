@@ -12,18 +12,24 @@ public class ApiService
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiService"/> class.
+    /// </summary>
+    /// <param name="http">The HTTP client used for making requests.</param>
+
     public ApiService(HttpClient http)
     {
         _http = http;
-        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, 
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull};            
     }
 
-    // GET all orders
-    public async Task<OrderLine[]> GetAllOrdersAsync()
+    // Get multiple orders from backend. Get X amount
+    public async Task<OrderLine[]> GetMultipleOrdersAsync(int amount)
     {
         try
         {
-            return await _http.GetFromJsonAsync<List<OrderLine[]>>("api/order");
+            return await _http.GetFromJsonAsync<List<OrderLine>>($"api/order/?amount={amount}");
         }
         catch(Exception e)
         {
@@ -31,24 +37,11 @@ public class ApiService
             return new List<OrderLine>();
         }
     }
+}
 
-    // GET order by ID
-    public async Task<OrderLine> GetOrderByIdAsync(int orderId)
-    {
-        try
-        {
-            return await _http.GetFromJsonAsync<OrderLine>($"api/order/{orderId}");
-        }
-        catch(Exception e)
-        {
-            Console.Writeline($"Error fetching {orderId}: {e.Message}");
-            return null;
-        }    
-    }
-
-    // Send data (POST)
-
-    // UPDATE data (PUT)
-
-    // DELETE data (DELETE)
+// Class for holding response - structurized like json-response from backend.
+public class ApiResponse<T>
+{
+    public string Status { get; set; } 
+    public T Data { get; set; } 
 }
