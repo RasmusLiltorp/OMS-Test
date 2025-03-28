@@ -14,13 +14,13 @@ public class DataService
     public List<ProductDTO> Products { get; private set; } = new();
     public List<OrderLine> OrderLines { get; private set; } = new();
 
-    public DataService()
+    public DataService(ApiService apiService)
     {
         _apiService = ApiService;
-        InitializeData();
+        InitializeDataAsync().GetAwaiter().GetResult();
     }
 
-    private void InitializeData()
+    private void InitializeDataAsync()
     {
         var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
         if(ordersFromApi != null && ordersFromApi.Any())
@@ -33,25 +33,31 @@ public class DataService
         }
     }
 
-    private List<OrderLine> ConvertResponseToOrderLine(OrderLine[] apiOrders)
+    private List<OrderLine> ConvertResponseToOrderLine(ApiResponse<Order>[] apiResponses)
     {
         List<OrderLine> result = new List<OrderLine>();
-        foreach (var order in apiOrders)
+        foreach(var response in apiResponses)
         {
-            OrderLine orderLine = new OrderLine
+            if(response.Status != "201" || response.Data == null)
             {
-                Customer = order.Customer,
-                Email = order.Email,
-                Products = order.Products,
-                OrderId = order.OrderId,
-                OrderDate = order.OrderDate,
-                TrackAndTrace = order.TrackAndTrace
+                Console.WriteLine($"Sucess: {response.Status} - {response.Message}");
+                continue;
+            }
+            var order = response.Data;
+            var orderLine = new OrderLine
+            {
+                OrderId = order.OrderId.ToString(),
+                Customer = order.CustomerInfo.Name,
+                Email = "no-email-asigned@gmail.com", //placeholder
+                OrderDate = DateTime.Parse(order.Date, out var date)
+                TrackAndTrace = "12345678", //placeholder
             };
-            result.Add(orderLine);
         }
-        return result;
     }
-
+    public void SaveNewUniqueProduct(ProductDTO product)
+    {
+        //save product to list and grab productinfo from PIM
+    }
     public void ProductFromOrder()
     {
     }
