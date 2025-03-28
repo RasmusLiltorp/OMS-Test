@@ -268,17 +268,28 @@
     private async Task SendReceipt(int orderId)
     {
         var order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == orderId);
-        if (order != null)
+        if (order == null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(order.Email) && order.Email.Contains("@"))
         {
             await EmailService.SendOrderReceiptAsync(order);
-            sendMessage = $"Receipt for Order #{order.OrderId} has been sent.";
-            StateHasChanged();
-            await Task.Delay(3000); // Optional: auto-hide after 3 sec
-            sendMessage = null;
-            StateHasChanged();
+            sendMessage = $"Receipt for Order #{order.OrderId} has been sent to {order.Email}.";
         }
-    }
+        else
+        {
+            sendMessage = $"Could not send receipt for Order #{order.OrderId} — missing or invalid email.";
+        }
 
+        StateHasChanged();
+
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(5000);
+            sendMessage = null;
+            await InvokeAsync(StateHasChanged);
+        });
+    }
     private void ViewReceipt(int orderId)
     {
         Navigation.NavigateTo($"/OMS/Receipt/{orderId}");

@@ -35,6 +35,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 1, 
                     OrderDate = new DateOnly(2025, 3, 1),
+                    Email = "john.doe@example.com",
                     TrackAndTrace = "123456789"
                 },
                 new OrderLine { 
@@ -45,6 +46,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 2, 
                     OrderDate = new DateOnly(2025, 3, 5),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -55,6 +57,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 3, 
                     OrderDate = new DateOnly(2025, 3, 10),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -65,6 +68,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 4, 
                     OrderDate = new DateOnly(2025, 3, 15),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -77,6 +81,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 5, 
                     OrderDate = new DateOnly(2025, 3, 20),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -89,6 +94,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 6, 
                     OrderDate = new DateOnly(2025, 3, 25),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -99,6 +105,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 7, 
                     OrderDate = new DateOnly(2025, 3, 30),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -109,6 +116,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 8, 
                     OrderDate = new DateOnly(2025, 3, 28),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -119,6 +127,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 9, 
                     OrderDate = new DateOnly(2025, 3, 26),
+                    Email = "",
                     TrackAndTrace = ""
                 },
                 new OrderLine { 
@@ -129,6 +138,7 @@ namespace OMS_Test.Services
                     }, 
                     OrderId = 10, 
                     OrderDate = new DateOnly(2025, 3, 24),
+                    Email = "",
                     TrackAndTrace = ""
                 }
             };

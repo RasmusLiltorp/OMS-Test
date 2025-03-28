@@ -30,6 +30,11 @@
         <InputDate class="form-control" @bind-Value="newOrder.OrderDate" />
     </div>
 
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <InputText class="form-control" @bind-Value="newOrder.Email" />
+    </div>
+
     <h5>Products</h5>
     @foreach (var item in newOrder.Products)
     {
@@ -77,8 +82,8 @@
                     <button type="button" class="btn-close" @onclick="CloseSendPaymentModal"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="form-label">Email or Phone Number</label>
-                    <input class="form-control" @bind="paymentRecipient" placeholder="Enter email or phone..." />
+                    <label class="form-label">Email</label>
+                    <input class="form-control" @bind="paymentRecipient" placeholder="Enter email..." />
 
                     @if (!string.IsNullOrEmpty(paymentMessage))
                     {
@@ -116,6 +121,7 @@
         OrderId = 0,
         Customer = string.Empty,
         OrderDate = DateOnly.FromDateTime(DateTime.Today),
+        Email = string.Empty,
         Products = new List<OrderProduct> 
         {    
             new OrderProduct { ProductID = "", Quantity = 1 } 
@@ -148,6 +154,7 @@
             OrderId = newOrder.OrderId,
             Customer = newOrder.Customer,
             OrderDate = newOrder.OrderDate,
+            Email = newOrder.Email,
             Products = cleanProducts
         });
 
@@ -158,6 +165,7 @@
             OrderId = 0,
             Customer = "",
             OrderDate = DateOnly.FromDateTime(DateTime.Today),
+            Email = "",
             Products = new List<OrderProduct> 
             {
                 new OrderProduct { ProductID = "", Quantity = 1, Price = 0 }
