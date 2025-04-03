@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -25,7 +26,7 @@ public class ApiService
     }
 
     // Get multiple orders from backend. Get X amount
-    public async Task<OrderLine[]> GetMultipleOrdersAsync(int amount)
+    public async Task<List<OrderLine>?> GetMultipleOrdersAsync(int amount)
     {
         try
         {
@@ -33,7 +34,7 @@ public class ApiService
         }
         catch(Exception e)
         {
-            Console.Writeline($"Error fetching orders: {e.Message}");
+            Console.WriteLine($"Error fetching orders: {e.Message}");
             return new List<OrderLine>();
         }
     }
@@ -43,5 +44,5 @@ public class ApiService
 public class ApiResponse<T>
 {
     public string Status { get; set; } 
-    public T Data { get; set; } 
+    public T Data { get; set; }
 }

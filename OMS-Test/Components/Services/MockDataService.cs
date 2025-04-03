@@ -33,7 +33,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "1", Quantity = 1 },
                         new OrderProduct { ProductID = "2", Quantity = 2 }
                     }, 
-                    OrderId = 1, 
+                    OrderId = "1", 
                     OrderDate = new DateTime(2025, 3, 1),
                     TrackAndTrace = "123456789"
                 },
@@ -43,7 +43,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "3", Quantity = 1 },
                         new OrderProduct { ProductID = "4", Quantity = 1 }
                     }, 
-                    OrderId = 2, 
+                    OrderId = "2", 
                     OrderDate = new DateTime(2025, 3, 5),
                     TrackAndTrace = ""
                 },
@@ -53,7 +53,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "1", Quantity = 2 },
                         new OrderProduct { ProductID = "2", Quantity = 1 }
                     }, 
-                    OrderId = 3, 
+                    OrderId = "3", 
                     OrderDate = new DateTime(2025, 3, 10),
                     TrackAndTrace = ""
                 },
@@ -63,7 +63,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "3", Quantity = 3 },
                         new OrderProduct { ProductID = "4", Quantity = 1 }
                     }, 
-                    OrderId = 4, 
+                    OrderId = "4", 
                     OrderDate = new DateTime(2025, 3, 15),
                     TrackAndTrace = ""
                 },
@@ -75,7 +75,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "3", Quantity = 2 },
                         new OrderProduct { ProductID = "5", Quantity = 25 }
                     }, 
-                    OrderId = 5, 
+                    OrderId = "5", 
                     OrderDate = new DateTime(2025, 3, 20),
                     TrackAndTrace = ""
                 },
@@ -87,7 +87,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "2", Quantity = 1 },
                         new OrderProduct { ProductID = "1", Quantity = 3 }
                     }, 
-                    OrderId = 6, 
+                    OrderId = "6", 
                     OrderDate = new DateTime(2025, 3, 25),
                     TrackAndTrace = ""
                 },
@@ -97,7 +97,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "1", Quantity = 1 },
                         new OrderProduct { ProductID = "2", Quantity = 2 }
                     }, 
-                    OrderId = 7, 
+                    OrderId = "7", 
                     OrderDate = new DateTime(2025, 3, 30),
                     TrackAndTrace = ""
                 },
@@ -107,7 +107,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "3", Quantity = 2 },
                         new OrderProduct { ProductID = "4", Quantity = 2 }
                     }, 
-                    OrderId = 8, 
+                    OrderId = "8", 
                     OrderDate = new DateTime(2025, 3, 28),
                     TrackAndTrace = ""
                 },
@@ -117,7 +117,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "1", Quantity = 1 },
                         new OrderProduct { ProductID = "2", Quantity = 1 }
                     }, 
-                    OrderId = 9, 
+                    OrderId = "9", 
                     OrderDate = new DateTime(2025, 3, 26),
                     TrackAndTrace = ""
                 },
@@ -127,7 +127,7 @@ namespace OMS_Test.Services
                         new OrderProduct { ProductID = "3", Quantity = 2 },
                         new OrderProduct { ProductID = "4", Quantity = 1 }
                     }, 
-                    OrderId = 10, 
+                    OrderId = "10", 
                     OrderDate = new DateTime(2025, 3, 24),
                     TrackAndTrace = ""
                 }

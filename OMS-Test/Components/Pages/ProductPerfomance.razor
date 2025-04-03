@@ -84,7 +84,7 @@
 
 @code {
     @inject NavigationManager NavigationManager
-    private void NavigateToOrderDetails(int orderId)
+    private void NavigateToOrderDetails(string orderId)
     {
         NavigationManager.NavigateTo($"/oms/order/{orderId}");
 }

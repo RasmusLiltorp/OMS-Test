@@ -89,13 +89,13 @@
 
 @code {
     private OrderLine? selectedOrder;
-    private int selectedOrderId;
+    private string selectedOrderId;
     private bool showConfirmation = false;
     private string? searchText;
 
     private void LoadSelectedOrder(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out int id))
+        if (e.Value?.ToString() is string id)
         {
             selectedOrderId = id;
             var original = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == id);

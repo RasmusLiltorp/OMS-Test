@@ -138,7 +138,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button class="btn btn-secondary" @onclick="CloseDeleteModal">Cancel</button>
-                                <button class="btn btn-danger" @onclick="ConfirmDelete" disabled="@(!selectedDeleteOrderId.HasValue)">Delete</button>
+                                <button class="btn btn-danger" @onclick="ConfirmDelete" disabled="@(selectedDeleteOrderId == null)">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -211,7 +211,7 @@
 
     private bool showDeleteModal = false;
     private string? deleteSearchText;
-    private int? selectedDeleteOrderId;
+    private string? selectedDeleteOrderId;
     private string? deleteMessage;
 
     private IEnumerable<OrderLine> FilteredDeleteOrders =>
@@ -241,9 +241,9 @@
 
     private void ConfirmDelete()
     {
-        if (selectedDeleteOrderId.HasValue)
+        if (selectedDeleteOrderId != null)
         {
-            var orderToDelete = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == selectedDeleteOrderId.Value);
+            var orderToDelete = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == selectedDeleteOrderId);
             if (orderToDelete != null)
             {
                 MockData.OrderLines?.Remove(orderToDelete);
@@ -265,7 +265,7 @@
         Navigation.NavigateTo("/OMS/ModifyOrder");
     }
 
-    private async Task SendReceipt(int orderId)
+    private async Task SendReceipt(string orderId)
     {
         var order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == orderId);
         if (order != null)
@@ -279,7 +279,7 @@
         }
     }
 
-    private void ViewReceipt(int orderId)
+    private void ViewReceipt(string orderId)
     {
         Navigation.NavigateTo($"/OMS/Receipt/{orderId}");
     }

@@ -16,11 +16,11 @@ public class DataService
 
     public DataService(ApiService apiService)
     {
-        _apiService = ApiService;
-        InitializeDataAsync().GetAwaiter().GetResult();
+        _apiService = new ApiService(new HttpClient());
+        InitializeDataAsync();
     }
 
-    private void InitializeDataAsync()
+    private async void InitializeDataAsync()
     {
         var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
         if(ordersFromApi != null && ordersFromApi.Any())
@@ -33,26 +33,22 @@ public class DataService
         }
     }
 
-    private List<OrderLine> ConvertResponseToOrderLine(ApiResponse<Order>[] apiResponses)
+    private List<OrderLine> ConvertResponseToOrderLine(List<OrderLine> apiResponse)
     {
         List<OrderLine> result = new List<OrderLine>();
-        foreach(var response in apiResponses)
+        foreach (var order in apiResponse)
         {
-            if(response.Status != "201" || response.Data == null)
-            {
-                Console.WriteLine($"Sucess: {response.Status} - {response.Message}");
-                continue;
-            }
-            var order = response.Data;
             var orderLine = new OrderLine
             {
-                OrderId = order.OrderId.ToString(),
-                Customer = order.CustomerInfo.Name,
-                Email = "no-email-asigned@gmail.com", //placeholder
-                OrderDate = DateTime.Parse(order.Date, out var date)
-                TrackAndTrace = "12345678", //placeholder
+                OrderId = order.OrderId,
+                Customer = order.Customer,
+                OrderDate = order.OrderDate,
+                TrackAndTrace = order.TrackAndTrace,
+                Products = order.Products
             };
+            result.Add(orderLine);
         }
+        return result;
     }
     public void SaveNewUniqueProduct(ProductDTO product)
     {
@@ -63,8 +59,10 @@ public class DataService
     }
     public decimal CalculateOrdertotal()
     {
+        return 1;
     }
     public decimal CalculateWeight()
     {
+        return 1;
     }
 }

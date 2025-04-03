@@ -1,4 +1,4 @@
-@page "/oms/order/{OrderId:int}"
+@page "/oms/order/{OrderId}"
 @using BlazorBootstrap
 @using OMS_Test.Services
 @inject MockDataService MockData
@@ -93,7 +93,7 @@
 
 @code {
     [Parameter]
-    public int OrderId { get; set; }
+    public string OrderId { get; set; }
 
     private OrderLine? order;
 

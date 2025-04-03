@@ -113,7 +113,7 @@
 
     private OrderLine newOrder = new OrderLine
     {
-        OrderId = 0,
+        OrderId = "0",
         Customer = string.Empty,
         OrderDate = DateTime.Today,
         Products = new List<OrderProduct> 
@@ -137,7 +137,7 @@
 
     private void HandleValidSubmit()
     {
-        newOrder.OrderId = MockData.OrderLines.Count + 1;
+        newOrder.OrderId = Guid.NewGuid().ToString();
 
         var cleanProducts = newOrder.Products
             .Where(p => !string.IsNullOrWhiteSpace(p.ProductID) && p.Quantity > 0)
@@ -155,7 +155,7 @@
 
         newOrder = new OrderLine
         {
-            OrderId = 0,
+            OrderId = "0",
             Customer = "",
             OrderDate = DateTime.Today,
             Products = new List<OrderProduct> 
