@@ -22,10 +22,10 @@ public class DataService
 
     private async void InitializeDataAsync()
     {
-        var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
-        if(ordersFromApi != null && ordersFromApi.Any())
+        var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 latest orders - simplfied for MVP
+        if(ordersFromApi != null && ordersFromApi.Status == "Success" && ordersFromApi.Data != null)
         {
-            OrderLines = ConvertResponseToOrderLine(ordersFromApi);
+            OrderLines = ConvertResponseToOrderLine(ordersFromApi.Data);
         }
         else
         {

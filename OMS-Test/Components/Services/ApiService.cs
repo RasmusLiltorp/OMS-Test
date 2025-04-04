@@ -26,16 +26,30 @@ public class ApiService
     }
 
     // Get multiple orders from backend. Get X amount
-    public async Task<List<OrderLine>?> GetMultipleOrdersAsync(int amount)
+    public async Task<ApiResponse<List<OrderLine>?>> GetMultipleOrdersAsync(int amount)
     {
         try
         {
-            return await _http.GetFromJsonAsync<List<OrderLine>>($"api/order/?amount={amount}");
+            var response = await _http.GetFromJsonAsync<ApiResponse<List<OrderLine>>>("api/order/?amount=" + amount);
+
+            if (response == null || response.Status != "Success" || response.Data == null)
+            {
+                return new ApiResponse<List<OrderLine>?>
+                {
+                    Status = "Exception",
+                    Data = null
+                };
+            }
+            return response;
         }
         catch(Exception e)
         {
             Console.WriteLine($"Error fetching orders: {e.Message}");
-            return new List<OrderLine>();
+            return new ApiResponse<List<OrderLine>?>
+            {
+                Status = "Exception",
+                Data = null
+            };
         }
     }
 }

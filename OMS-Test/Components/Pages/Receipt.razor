@@ -1,4 +1,4 @@
-@page "/OMS/Receipt/{OrderId:int}"
+@page "/OMS/Receipt/{OrderId}"
 @using OMS_Test.Services
 @inject MockDataService MockData
 @inject NavigationManager NavigationManager
@@ -92,9 +92,9 @@
                                                         <td>
                                                             <h5 class="text-truncate font-size-14 mb-1">@productDetails.ProductName</h5>
                                                         </td>
-                                                        <td>@productDetails.Price.ToString("C")</td>
+                                                        <td>@productDetails.Price.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK"))-</td>
                                                         <td>@product.Quantity</td>
-                                                        <td class="text-end">@((productDetails.Price * product.Quantity).ToString("C"))</td>
+                                                        <td class="text-end">@((productDetails.Price * product.Quantity).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK")))</td>
                                                     </tr>
                                                     index++;
                                                 }
@@ -111,7 +111,7 @@
                                             <tr>
                                                 <td class="text-start"><strong>Grand Total:</strong></td>
                                                 <td class="text-end">
-                                                    <strong>@(order != null ? MockData.CalculateOrderTotal(order).ToString("C") : "0,00 kr.")</strong>
+                                                    <strong>@(order != null ? MockData.CalculateOrderTotal(order).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK")) : "0,00 kr.")</strong>
                                                 </td>
                                             </tr>
                                         </tbody>
