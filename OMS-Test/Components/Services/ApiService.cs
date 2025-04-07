@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DTOs;
@@ -13,10 +11,6 @@ public class ApiService
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ApiService"/> class.
-    /// </summary>
-    /// <param name="http">The HTTP client used for making requests.</param>
     public ApiService(HttpClient http)
     {
         _http = http;
@@ -27,16 +21,18 @@ public class ApiService
         };
     }
 
-    // Get multiple orders from backend. Get X amount
-    public async Task<ApiResponse<List<OrderLine>?>> GetMultipleOrdersAsync(int amount)
+    public async Task<ApiResponse<List<JsonDTO.OrderDataDTO>?>> GetMultipleOrdersAsync(int amount)
     {
         try
         {
-            var response = await _http.GetFromJsonAsync<ApiResponse<List<OrderLine>>>("api/order/?amount=" + amount);
+            var response = await _http.GetFromJsonAsync<ApiResponse<List<JsonDTO.OrderDataDTO>>>(
+                "api/order/?amount=" + amount,
+                _jsonOptions
+            );
 
             if (response == null || response.Status != "Success" || response.Data == null)
             {
-                return new ApiResponse<List<OrderLine>?>
+                return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
                 {
                     Status = "Exception",
                     Data = null
@@ -45,10 +41,9 @@ public class ApiService
 
             return response;
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine($"Error fetching orders: {e.Message}");
-            return new ApiResponse<List<OrderLine>?>
+            return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
             {
                 Status = "Exception",
                 Data = null
@@ -56,16 +51,18 @@ public class ApiService
         }
     }
 
-    // Get single order from backend.
-    public async Task<ApiResponse<List<OrderLine>?>> GetOrderAsync(string orderID)
+    public async Task<ApiResponse<List<JsonDTO.OrderDataDTO>?>> GetOrderAsync(string orderID)
     {
         try
         {
-            var response = await _http.GetFromJsonAsync<ApiResponse<List<OrderLine>>>("api/order/" + orderID);
+            var response = await _http.GetFromJsonAsync<ApiResponse<List<JsonDTO.OrderDataDTO>>>(
+                "api/order/" + orderID,
+                _jsonOptions
+            );
 
             if (response == null || response.Status != "Success" || response.Data == null)
             {
-                return new ApiResponse<List<OrderLine>?>
+                return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
                 {
                     Status = "Exception",
                     Data = null
@@ -74,10 +71,9 @@ public class ApiService
 
             return response;
         }
-        catch (Exception e)
+        catch
         {
-            Console.WriteLine($"Error fetching order: {e.Message}");
-            return new ApiResponse<List<OrderLine>?>
+            return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
             {
                 Status = "Exception",
                 Data = null
@@ -85,34 +81,39 @@ public class ApiService
         }
     }
 
-    // Post new order to backend.
-    public async Task<ApiResponse<List<OrderLine>?>> PostOrderLineToBackend(OrderLine orderLine)
+    public async Task<ApiResponse<List<JsonDTO.OrderDataDTO>?>> PostOrderLineToBackend(JsonDTO.OrderDataDTO orderDto)
     {
         try
         {
-            // Serialize the orderLine object to JSON
-            var json = JsonSerializer.Serialize(orderLine, _jsonOptions);
-            // hvordan man så lige gør det ved jeg ikke (endnu)
-            var response = await _http.PostAsJsonAsync("api/order/", orderLine, _jsonOptions);
+            var json = JsonSerializer.Serialize(orderDto, _jsonOptions);
+            var response = await _http.PostAsJsonAsync("api/order/", orderDto, _jsonOptions);
             
             if (response == null || response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                return new ApiResponse<List<OrderLine>?>
+                return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
                 {
                     Status = "Exception",
                     Data = null
                 };
             }
 
-            return new ApiResponse<List<OrderLine>?>
+            var result = await response.Content
+                .ReadFromJsonAsync<ApiResponse<List<JsonDTO.OrderDataDTO>>>(_jsonOptions);
+
+            if (result == null)
             {
-                Status = "Success",
-                Data = await response.Content.ReadFromJsonAsync<List<OrderLine>>(_jsonOptions)
-            };
+                return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
+                {
+                    Status = "Exception",
+                    Data = null
+                };
+            }
+
+            return result;
         }
-        catch (Exception e)
+        catch
         {
-            return new ApiResponse<List<OrderLine>?>
+            return new ApiResponse<List<JsonDTO.OrderDataDTO>?>
             {
                 Status = "Exception",
                 Data = null
@@ -121,9 +122,11 @@ public class ApiService
     }
 }
 
-// Class for holding response - structurized like json-response from backend.
 public class ApiResponse<T>
 {
-    public string Status { get; set; } 
+    [JsonPropertyName("status")]
+    public string Status { get; set; }
+
+    [JsonPropertyName("data")]
     public T Data { get; set; }
 }

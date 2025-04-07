@@ -1,8 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DTOs;
 
 namespace OMS_Services;
@@ -16,14 +14,14 @@ public class DataService
 
     public DataService(ApiService apiService)
     {
-        _apiService = new ApiService(new HttpClient());
+        _apiService = apiService;
         InitializeDataAsync();
     }
 
     private async void InitializeDataAsync()
     {
-        var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 latest orders - simplfied for MVP
-        if(ordersFromApi != null && ordersFromApi.Status == "Success" && ordersFromApi.Data != null)
+        var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100);
+        if (ordersFromApi.Status == "Success" && ordersFromApi.Data != null)
         {
             OrderLines = ConvertResponseToOrderLine(ordersFromApi.Data);
         }
@@ -33,34 +31,44 @@ public class DataService
         }
     }
 
-    private List<OrderLine> ConvertResponseToOrderLine(List<OrderLine> apiResponse)
+    private List<OrderLine> ConvertResponseToOrderLine(List<JsonDTO.OrderDataDTO> apiResponse)
     {
-        List<OrderLine> result = new List<OrderLine>();
+        var result = new List<OrderLine>();
         foreach (var order in apiResponse)
         {
             var orderLine = new OrderLine
             {
                 OrderId = order.OrderId,
-                Customer = order.Customer,
-                OrderDate = order.OrderDate,
-                TrackAndTrace = order.TrackAndTrace,
-                Products = order.Products
+                Customer = order.CustomerInfo == null ? "" : order.CustomerInfo.Name,
+                OrderDate = order.Date,
+                TrackAndTrace = null,
+                Products = order.LineElements == null
+                    ? new List<OrderProduct>()
+                    : order.LineElements.ConvertAll(le => new OrderProduct
+                    {
+                        ProductID = le.ProductUuid.ToString(),
+                        Quantity = le.Amount,
+                        Price = le.Price
+                    })
             };
             result.Add(orderLine);
         }
         return result;
     }
+
     public void SaveNewUniqueProduct(ProductDTO product)
     {
-        //save product to list and grab productinfo from PIM
     }
+
     public void ProductFromOrder()
     {
     }
+
     public decimal CalculateOrdertotal()
     {
         return 1;
     }
+
     public decimal CalculateWeight()
     {
         return 1;
