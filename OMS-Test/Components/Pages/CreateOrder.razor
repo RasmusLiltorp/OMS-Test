@@ -39,7 +39,9 @@
                     <option disabled selected value="">Select product</option>
                     @foreach (var product in DataService.Products)
                     {
-                        <option value="@product.ProductID">@product.ProductName (@product.Price.ToString("C"))</option>
+                        <option value="@product.ProductID">
+                            @product.ProductName (@product.Price.ToString("C"))
+                        </option>
                     }
                 </select>
             </div>
