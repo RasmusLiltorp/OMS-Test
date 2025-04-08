@@ -6,6 +6,6 @@ namespace OMS_Test.Services
 {
     public interface IEmailService
     {
-        Task SendOrderReceiptAsync(OrderLine order);
+        Task SendOrderReceiptAsync(OrderDTO order);    
     }
 }

@@ -1,10 +1,15 @@
-namespace DTOs
+using System.Text.Json.Serialization;
+namespace DTOs;
+
+public class ProductDTO
 {
-    public class ProductDTO
-    {
-        public required string ProductID { get; set; }
-        public required string ProductName { get; set; }
-        public decimal Price { get; set; }
-        public decimal Weight { get; set; }
-    }
+    [JsonPropertyName("product_id")]
+    public required string ProductID { get; set; }
+    [JsonPropertyName("name")]
+    public required string ProductName { get; set; }
+    [JsonPropertyName("price")]
+    public decimal Price { get; set; }
+    
+    //Placeholder
+    public decimal Weight { get; set; }
 }

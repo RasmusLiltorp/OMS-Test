@@ -14,9 +14,9 @@ namespace OMS_Test.Services
             _mockData = mockData;
         }
 
-        public async Task SendOrderReceiptAsync(OrderLine order)
+        public async Task SendOrderReceiptAsync(OrderDTO order)
         {
-            if (order.Email == null)
+            if (order.CustomerInfo?.Email == null)
             {
                 Console.WriteLine("No customer email provided.");
                 return;
@@ -39,13 +39,13 @@ namespace OMS_Test.Services
             sb.AppendLine("<tr>");
             sb.AppendLine("<td style='vertical-align: top;'>");
             sb.AppendLine("<p><strong>Billed To:</strong><br>");
-            sb.AppendLine($"{order.Customer}<br>");
+            sb.AppendLine($"{order.CustomerInfo.Name}<br>");
             sb.AppendLine("Unknown Address<br>");
             sb.AppendLine("<a href='mailto:Customer@mail.com'>Customer@mail.com</a><br>");
             sb.AppendLine("+45 87 65 43 21</p>");
             sb.AppendLine("</td>");
             sb.AppendLine("<td style='text-align: right; vertical-align: top;'>");
-            sb.AppendLine($"<p><strong>Invoice Date:</strong> {order.OrderDate:dd MMM yyyy}<br>");
+            sb.AppendLine($"<p><strong>Invoice Date:</strong> {order.Date:dd MMM yyyy}<br>");
             sb.AppendLine($"<strong>Order No:</strong> {order.OrderId}</p>");
             sb.AppendLine("</td>");
             sb.AppendLine("</tr>");
@@ -65,21 +65,20 @@ namespace OMS_Test.Services
             sb.AppendLine("</thead><tbody>");
 
             int index = 1;
-            foreach (var product in order.Products)
+            foreach (var lineElement in order.LineElements)
             {
-                var productDetails = _mockData.Products.FirstOrDefault(p => p.ProductID == product.ProductID);
-                if (productDetails != null)
+                var product = _mockData.Products.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid.ToString());
+                
+                if (product != null)
                 {
-                    decimal itemTotal = productDetails.Price * product.Quantity;
-
+                    decimal itemTotal = lineElement.Price * lineElement.Amount;
                     sb.AppendLine("<tr>");
                     sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{index}</td>");
-                    sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{productDetails.ProductName}</td>");
-                    sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{productDetails.Price.ToString("C")}</td>");
-                    sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{product.Quantity}</td>");
+                    sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{product.ProductName}</td>");
+                    sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{lineElement.Price.ToString("C")}</td>");
+                    sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{lineElement.Amount}</td>");
                     sb.AppendLine($"<td style='padding: 8px; border: 1px solid #ddd;'>{itemTotal.ToString("C")}</td>");
                     sb.AppendLine("</tr>");
-
                     index++;
                 }
             }
@@ -96,7 +95,7 @@ namespace OMS_Test.Services
 
             var mail = new MailMessage();
             mail.From = new MailAddress("ArnesElektronik@gmail.com", "Arnes Elektronik");
-            mail.To.Add(order.Email);
+            mail.To.Add(order.CustomerInfo.Email);
             mail.Subject = $"Receipt for Order #{order.OrderId}";
             mail.Body = sb.ToString();
             mail.IsBodyHtml = true;

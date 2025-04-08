@@ -4,5 +4,4 @@
 ///</Summary>
 class ProductService
 {
-
 }

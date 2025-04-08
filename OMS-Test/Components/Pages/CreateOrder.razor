@@ -1,11 +1,11 @@
 @page "/OMS/CreateOrder"
 @using BlazorBootstrap
-@using OMS_Test.Services
-@inject MockDataService MockData
+@using OMS_Services
+@inject DataService DataService
+@inject ApiService ApiService
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @using DTOs
-
 
 <PageTitle>Create Order</PageTitle>
 
@@ -22,29 +22,29 @@
 
     <div class="mb-3">
         <label class="form-label">Customer Name</label>
-        <InputText class="form-control" @bind-Value="newOrder.Customer" />
+        <InputText class="form-control" @bind-Value="newOrder.CustomerInfo.Name" />
     </div>
 
     <div class="mb-3">
         <label class="form-label">Order Date</label>
-        <InputDate class="form-control" @bind-Value="newOrder.OrderDate" />
+        <InputDate class="form-control" @bind-Value="newOrder.Date" />
     </div>
 
     <h5>Products</h5>
-    @foreach (var item in newOrder.Products)
+    @foreach (var item in newOrder.LineElements)
     {
         <div class="mb-3 row">
             <div class="col-4">
-                <select class="form-select" value="@item.ProductID" @onchange="(e) => OnProductChanged(e, item)">   
+                <select class="form-select" value="@item.ProductUuid" @onchange="(e) => OnProductChanged(e, item)">
                     <option disabled selected value="">Select product</option>
-                    @foreach (var product in MockData.Products)
+                    @foreach (var product in DataService.Products)
                     {
                         <option value="@product.ProductID">@product.ProductName (@product.Price.ToString("C"))</option>
                     }
                 </select>
             </div>
             <div class="col-2">
-                <InputNumber class="form-control" @bind-Value="item.Quantity" min="1" />
+                <InputNumber class="form-control" @bind-Value="item.Amount" min="1" />
             </div>
             <div class="col-3">
                 <InputNumber class="form-control" @bind-Value="item.Price" step="0.01" />
@@ -95,92 +95,80 @@
     <div class="modal-backdrop fade show"></div>
 }
 
-
-
-
 @if (showConfirmation)
 {
     <div class="alert alert-success mt-3">Order created successfully!</div>
 }
 
 @code {
-
     private bool showSendPaymentModal = false;
     private string paymentRecipient = string.Empty;
     private string paymentMessage = string.Empty;
     private bool paymentLinkSent = false;
-
-
-    private OrderLine newOrder = new OrderLine
+    private OrderDTO newOrder = new OrderDTO
     {
-        OrderId = "0",
-        Customer = string.Empty,
-        OrderDate = DateTime.Today,
-        Products = new List<OrderProduct> 
+        CustomerInfo = new CustomerInfoDTO { Name = "" },
+        ShippingInfo = new ShippingInfoDTO(),
+        LineElements = new List<LineElementDTO> 
         {    
-            new OrderProduct { ProductID = "", Quantity = 1 } 
-        }
+            new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 } 
+        },
+        Date = DateTime.Today
     };
-
     private bool showConfirmation = false;
 
     private void AddProduct()
     {
-        newOrder.Products ??= new List<OrderProduct>();
-        newOrder.Products.Add(new OrderProduct { ProductID = "", Quantity = 1 });
+        newOrder.LineElements.Add(new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 });
     }
 
-    private void RemoveProduct(OrderProduct product)
+    private void RemoveProduct(LineElementDTO product)
     {
-        newOrder.Products.Remove(product);
+        newOrder.LineElements.Remove(product);
     }
 
-    private void HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
-        newOrder.OrderId = Guid.NewGuid().ToString();
-
-        var cleanProducts = newOrder.Products
-            .Where(p => !string.IsNullOrWhiteSpace(p.ProductID) && p.Quantity > 0)
-            .ToList();
-
-        MockData.OrderLines.Add(new OrderLine
+        if (newOrder.ShippingInfo == null)
+            newOrder.ShippingInfo = new ShippingInfoDTO();
+            
+        newOrder.CustomerInfo.Email = paymentRecipient;
+        
+        decimal totalCost = 0;
+        foreach (var item in newOrder.LineElements)
         {
-            OrderId = newOrder.OrderId,
-            Customer = newOrder.Customer,
-            OrderDate = newOrder.OrderDate,
-            Products = cleanProducts
-        });
-
+            totalCost += item.Price * item.Amount;
+        }
+        newOrder.TotalCost = totalCost;
+        
+        var result = await ApiService.PostOrderLineToBackend(newOrder);
+        
         showConfirmation = true;
-
-        newOrder = new OrderLine
+        
+        // Reset for a new order
+        newOrder = new OrderDTO
         {
-            OrderId = "0",
-            Customer = "",
-            OrderDate = DateTime.Today,
-            Products = new List<OrderProduct> 
+            CustomerInfo = new CustomerInfoDTO { Name = "" },
+            ShippingInfo = new ShippingInfoDTO(),
+            LineElements = new List<LineElementDTO>
             {
-                new OrderProduct { ProductID = "", Quantity = 1, Price = 0 }
-            }
+                new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 }
+            },
+            Date = DateTime.Today
         };
         paymentLinkSent = false;
-
     }
 
-    private void OnProductChanged(ChangeEventArgs e, OrderProduct product)
+    private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
     {
-        var newProductId = e.Value?.ToString();
-        if (!string.IsNullOrWhiteSpace(newProductId))
+        var productIdStr = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(productIdStr) && int.TryParse(productIdStr, out int productId))
         {
-            product.ProductID = newProductId;
-
-            if (product.Price == 0)
+            item.ProductUuid = productId;
+            var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
+            if (product != null)
             {
-                var selected = MockData.Products.FirstOrDefault(p => p.ProductID == newProductId);
-                if (selected != null)
-                {
-                    product.Price = selected.Price;
-                }
+                item.Price = product.Price;
             }
         }
     }
@@ -210,7 +198,4 @@
             paymentLinkSent = true;
         }
     }
-
-
-
 }

@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DTOs;
 
 namespace OMS_Test.Services
 {
+    /// <summary>
+    /// Provides mock data for testing purposes
+    /// </summary>
     public class MockDataService
     {
         public List<ProductDTO> Products { get; private set; } = new();
-        public List<OrderLine> OrderLines { get; private set; } = new();
+        public List<OrderDTO> Orders { get; private set; } = new();
 
         public MockDataService()
         {
@@ -25,158 +29,309 @@ namespace OMS_Test.Services
                 new ProductDTO { ProductID = "5", ProductName = "Haribo Vingummibamser", Price = 19.99m, Weight = 0.2m },
             };
 
-            OrderLines = new List<OrderLine>
+            Orders = new List<OrderDTO>
             {
-                new OrderLine { 
-                    Customer = "John Doe", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "1", Quantity = 1 },
-                        new OrderProduct { ProductID = "2", Quantity = 2 }
-                    }, 
-                    OrderId = "1", 
-                    OrderDate = new DateTime(2025, 3, 1),
-                    TrackAndTrace = "123456789"
-                },
-                new OrderLine { 
-                    Customer = "Jane Doe", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "3", Quantity = 1 },
-                        new OrderProduct { ProductID = "4", Quantity = 1 }
-                    }, 
-                    OrderId = "2", 
-                    OrderDate = new DateTime(2025, 3, 5),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "James Bond", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "1", Quantity = 2 },
-                        new OrderProduct { ProductID = "2", Quantity = 1 }
-                    }, 
-                    OrderId = "3", 
-                    OrderDate = new DateTime(2025, 3, 10),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Jason Bourne", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "3", Quantity = 3 },
-                        new OrderProduct { ProductID = "4", Quantity = 1 }
-                    }, 
-                    OrderId = "4", 
-                    OrderDate = new DateTime(2025, 3, 15),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Fætter Guf", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "1", Quantity = 1 },
-                        new OrderProduct { ProductID = "2", Quantity = 1 },
-                        new OrderProduct { ProductID = "3", Quantity = 2 },
-                        new OrderProduct { ProductID = "5", Quantity = 25 }
-                    }, 
-                    OrderId = "5", 
-                    OrderDate = new DateTime(2025, 3, 20),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Casper Holm Bach", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "3", Quantity = 2 },
-                        new OrderProduct { ProductID = "4", Quantity = 1 },
-                        new OrderProduct { ProductID = "2", Quantity = 1 },
-                        new OrderProduct { ProductID = "1", Quantity = 3 }
-                    }, 
-                    OrderId = "6", 
-                    OrderDate = new DateTime(2025, 3, 25),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Tobias Hansen", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "1", Quantity = 1 },
-                        new OrderProduct { ProductID = "2", Quantity = 2 }
-                    }, 
-                    OrderId = "7", 
-                    OrderDate = new DateTime(2025, 3, 30),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Karem Jahjah", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "3", Quantity = 2 },
-                        new OrderProduct { ProductID = "4", Quantity = 2 }
-                    }, 
-                    OrderId = "8", 
-                    OrderDate = new DateTime(2025, 3, 28),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Lucas Barlach", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "1", Quantity = 1 },
-                        new OrderProduct { ProductID = "2", Quantity = 1 }
-                    }, 
-                    OrderId = "9", 
-                    OrderDate = new DateTime(2025, 3, 26),
-                    TrackAndTrace = ""
-                },
-                new OrderLine { 
-                    Customer = "Mads Mikkelsen", 
-                    Products = new List<OrderProduct> { 
-                        new OrderProduct { ProductID = "3", Quantity = 2 },
-                        new OrderProduct { ProductID = "4", Quantity = 1 }
-                    }, 
-                    OrderId = "10", 
-                    OrderDate = new DateTime(2025, 3, 24),
-                    TrackAndTrace = ""
-                }
-            };
-
-            foreach (var order in OrderLines)
-            {
-                foreach (var orderProduct in order.Products)
+                new OrderDTO 
                 {
-                    if (orderProduct.Price == 0)
+                    OrderId = "1",
+                    Date = new DateTime(2025, 3, 1),
+                    FulfillmentState = 1,
+                    TotalCost = 4999.99m + (7999.99m * 2),
+                    CustomerInfo = new CustomerInfoDTO 
                     {
-                        var product = Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
-                        if (product != null)
-                        {
-                            orderProduct.Price = product.Price;
-                        }
+                        CustomerId = "1",
+                        Name = "John Doe"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "123 Main St",
+                        Address2 = "Apt 101",
+                        ZipcodeId = 5000,
+                        CountryId = 45,
+                        TrackingNumber = "123456789"
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 1, Amount = 1, Price = 4999.99m },
+                        new LineElementDTO { ProductUuid = 2, Amount = 2, Price = 7999.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "2",
+                    Date = new DateTime(2025, 3, 5),
+                    FulfillmentState = 1,
+                    TotalCost = 399.99m + 2999.99m,
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "2",
+                        Name = "Jane Doe"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "456 Oak Ave",
+                        Address2 = "",
+                        ZipcodeId = 5001,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 3, Amount = 1, Price = 399.99m },
+                        new LineElementDTO { ProductUuid = 4, Amount = 1, Price = 2999.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "3",
+                    Date = new DateTime(2025, 3, 10),
+                    FulfillmentState = 1,
+                    TotalCost = (4999.99m * 2) + 7999.99m,
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "7",
+                        Name = "James Bond"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "007 Secret St",
+                        Address2 = "",
+                        ZipcodeId = 5007,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 1, Amount = 2, Price = 4999.99m },
+                        new LineElementDTO { ProductUuid = 2, Amount = 1, Price = 7999.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "4",
+                    Date = new DateTime(2025, 3, 15),
+                    FulfillmentState = 1,
+                    TotalCost = (399.99m * 3) + 2999.99m,
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "4",
+                        Name = "Jason Bourne"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "Unknown Location",
+                        Address2 = "",
+                        ZipcodeId = 9999,
+                        CountryId = 1
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 3, Amount = 3, Price = 399.99m },
+                        new LineElementDTO { ProductUuid = 4, Amount = 1, Price = 2999.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "5",
+                    Date = new DateTime(2025, 3, 20),
+                    FulfillmentState = 1,
+                    TotalCost = 4999.99m + 7999.99m + (399.99m * 2) + (19.99m * 25),
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "5",
+                        Name = "Fætter Guf"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "Candy Lane 5",
+                        Address2 = "",
+                        ZipcodeId = 5005,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 1, Amount = 1, Price = 4999.99m },
+                        new LineElementDTO { ProductUuid = 2, Amount = 1, Price = 7999.99m },
+                        new LineElementDTO { ProductUuid = 3, Amount = 2, Price = 399.99m },
+                        new LineElementDTO { ProductUuid = 5, Amount = 25, Price = 19.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "6",
+                    Date = new DateTime(2025, 3, 25),
+                    FulfillmentState = 1,
+                    TotalCost = (399.99m * 2) + 2999.99m + 7999.99m + (4999.99m * 3),
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "6",
+                        Name = "Casper Holm Bach"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "Tech Avenue 42",
+                        Address2 = "Floor 3",
+                        ZipcodeId = 5006,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 3, Amount = 2, Price = 399.99m },
+                        new LineElementDTO { ProductUuid = 4, Amount = 1, Price = 2999.99m },
+                        new LineElementDTO { ProductUuid = 2, Amount = 1, Price = 7999.99m },
+                        new LineElementDTO { ProductUuid = 1, Amount = 3, Price = 4999.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "7",
+                    Date = new DateTime(2025, 3, 30),
+                    FulfillmentState = 1,
+                    TotalCost = 4999.99m + (7999.99m * 2),
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "7",
+                        Name = "Tobias Hansen"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "Developer Street 10",
+                        Address2 = "",
+                        ZipcodeId = 5100,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 1, Amount = 1, Price = 4999.99m },
+                        new LineElementDTO { ProductUuid = 2, Amount = 2, Price = 7999.99m }
+                    }
+                },
+                
+                new OrderDTO 
+                {
+                    OrderId = "8",
+                    Date = new DateTime(2025, 3, 28),
+                    FulfillmentState = 1,
+                    TotalCost = (399.99m * 2) + (2999.99m * 2),
+                    CustomerInfo = new CustomerInfoDTO 
+                    {
+                        CustomerId = "8",
+                        Name = "Karem Jahjah"
+                    },
+                    ShippingInfo = new ShippingInfoDTO 
+                    {
+                        Address1 = "Creative Lane 8",
+                        Address2 = "",
+                        ZipcodeId = 5200,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO> 
+                    {
+                        new LineElementDTO { ProductUuid = 3, Amount = 2, Price = 399.99m },
+                        new LineElementDTO { ProductUuid = 4, Amount = 2, Price = 2999.99m }
+                    }
+                },
+
+                new OrderDTO
+                {
+                    OrderId = "9",
+                    Date = new DateTime(2025, 3, 30),
+                    FulfillmentState = 1,
+                    TotalCost = (4999.99m * 2) + (7999.99m * 2),
+                    CustomerInfo = new CustomerInfoDTO
+                    {
+                        CustomerId = "9",
+                        Name = "Lucas Barlach"
+                    },
+                    ShippingInfo = new ShippingInfoDTO
+                    {
+                        Address1 = "Test Street 1",
+                        Address2 = "",
+                        ZipcodeId = 5300,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO>
+                    {
+                        new LineElementDTO { ProductUuid = 1, Amount = 2, Price = 4999.99m },
+                        new LineElementDTO { ProductUuid = 2, Amount = 2, Price = 7999.99m }
+                    }
+                },
+
+                new OrderDTO
+                {
+                    OrderId = "10",
+                    Date = new DateTime(2025, 3, 31),
+                    FulfillmentState = 1,
+                    TotalCost = (399.99m * 3) + (2999.99m * 2),
+                    CustomerInfo = new CustomerInfoDTO
+                    {
+                        CustomerId = "10",
+                        Name = "Mikkel Møller"
+                    },
+                    ShippingInfo = new ShippingInfoDTO
+                    {
+                        Address1 = "Mock Street 10",
+                        Address2 = "",
+                        ZipcodeId = 5400,
+                        CountryId = 45
+                    },
+                    LineElements = new List<LineElementDTO>
+                    {
+                        new LineElementDTO { ProductUuid = 3, Amount = 3, Price = 399.99m },
+                        new LineElementDTO { ProductUuid = 4, Amount = 2, Price = 2999.99m }
                     }
                 }
-            }
+            };
         }
 
-        public List<ProductDTO> GetProductsForOrder(OrderLine order)
+        /// <summary>
+        /// Gets the list of products for a specific order
+        /// </summary>
+        public List<ProductDTO> GetProductsForOrder(OrderDTO order)
         {
-            return Products.Where(p => order.Products.Any(op => op.ProductID == p.ProductID)).ToList();
-        }
-
-        public decimal CalculateOrderTotal(OrderLine order)
-        {
-            decimal total = 0;
-            foreach (var orderProduct in order.Products)
+            List<ProductDTO> orderProducts = new List<ProductDTO>();
+            foreach (var lineElement in order.LineElements)
             {
-                var product = Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                var productId = lineElement.ProductUuid.ToString();
+                var product = Products.FirstOrDefault(p => p.ProductID == productId);
                 if (product != null)
                 {
-                    total += orderProduct.Price * orderProduct.Quantity;
+                    orderProducts.Add(product);
                 }
+            }
+            return orderProducts;
+        }
+
+        /// <summary>
+        /// Calculates the total price of an order
+        /// </summary>
+        public decimal CalculateOrderTotal(OrderDTO order)
+        {
+            decimal total = 0;
+            foreach (var lineElement in order.LineElements)
+            {
+                total += lineElement.Price * lineElement.Amount;
             }
             return total;
         }
-        
-        public decimal CalculateOrderWeight(OrderLine order)
+
+        /// <summary>
+        /// Calculates the total weight of an order
+        /// </summary>
+        public decimal CalculateOrderWeight(OrderDTO order)
         {
             decimal weight = 0;
-            foreach (var orderProduct in order.Products)
+            foreach (var lineElement in order.LineElements)
             {
-                var product = Products.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                var productId = lineElement.ProductUuid.ToString();
+                var product = Products.FirstOrDefault(p => p.ProductID == productId);
                 if (product != null)
                 {
-                    weight += product.Weight * orderProduct.Quantity;
+                    weight += product.Weight * lineElement.Amount;
                 }
             }
             return weight;

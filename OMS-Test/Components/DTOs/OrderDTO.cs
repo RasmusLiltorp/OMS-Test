@@ -1,19 +1,26 @@
-namespace DTOs
-{
-    public class OrderProduct
-    {
-        public required string ProductID { get; set; }
-        public int Quantity { get; set; }
-        public decimal Price { get; set; }
-    }
+using System.Text.Json.Serialization;
+namespace DTOs;
 
-    public class OrderLine
-    {
-        public required string Customer { get; set; }
-        public string Email { get; set; }
-        public required List<OrderProduct> Products { get; set; }
-        public required string OrderId { get; set; }
-        public DateTime OrderDate { get; set; }
-        public string? TrackAndTrace { get; set; }
-    }
+public class OrderDTO
+{
+    [JsonPropertyName("order-id")]
+    public string OrderId { get; set; }
+
+    [JsonPropertyName("line-elements")]
+    public List<LineElementDTO> LineElements { get; set; }
+
+    [JsonPropertyName("total-cost")]
+    public decimal TotalCost { get; set; }
+
+    [JsonPropertyName("date")]
+    public DateTime Date { get; set; }
+
+    [JsonPropertyName("fulfillment-state")]
+    public int FulfillmentState { get; set; }
+
+    [JsonPropertyName("customer-info")]
+    public CustomerInfoDTO CustomerInfo { get; set; }
+
+    [JsonPropertyName("shipping-info")]
+    public ShippingInfoDTO ShippingInfo { get; set; }
 }
