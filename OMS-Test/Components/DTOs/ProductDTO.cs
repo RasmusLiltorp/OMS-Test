@@ -4,6 +4,8 @@ namespace DTOs
     {
         public required string ProductID { get; set; }
         public required string ProductName { get; set; }
+        public string BrandName { get; set; }
+        public string ProductCategory  { get; set; }
         public decimal Price { get; set; }
         public decimal Weight { get; set; }
     }

@@ -1,0 +1,90 @@
+@page "/OMS/BrandInsights"
+@using BlazorBootstrap
+@using OMS_Test.Services
+@inject MockDataService MockData
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject IEmailService EmailService
+@using DTOs
+
+<PageTitle>Brand Insights</PageTitle>
+
+<div class="topnav">
+    <a href="./OMS/Manage">OMS</a>
+    <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+</div>
+
+<h5>Filter by Date Range</h5>
+<div class="mb-3 d-flex align-items-center gap-3">
+    <label>From:</label>
+    <InputDate @bind-Value="fromDate" class="form-control" />
+    <label>To:</label>
+    <InputDate @bind-Value="toDate" class="form-control" />
+    <button class="btn btn-primary" @onclick="FilterAnalytics">Apply</button>
+</div>
+
+
+<h3>Brand Analytics</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Total Units Sold</th>
+            <th>Total Revenue</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var brand in filteredBrandAnalytics)
+        {
+            <tr>
+                <td>@brand.BrandName</td>
+                <td>@brand.TotalUnitsSold</td>
+                <td>@brand.TotalRevenue.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+
+<h3>Category Analytics</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Total Units Sold</th>
+            <th>Total Revenue</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var category in filteredCategoryAnalytics)
+        {
+            <tr>
+                <td>@category.CategoryName</td>
+                <td>@category.TotalUnitsSold</td>
+                <td>@category.TotalRevenue.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+
+
+</table>
+
+@code {
+    private DateOnly fromDate = new(2025, 3, 1);
+    private DateOnly toDate = new(2025, 3, 31);
+    private List<BrandAnalyticsDTO> filteredBrandAnalytics = new();
+    private List<CategoryAnalyticsDTO> filteredCategoryAnalytics = new();
+
+    protected override void OnInitialized()
+    {
+        FilterAnalytics(); // populate initially
+    }
+
+    private void FilterAnalytics()
+    {
+        filteredBrandAnalytics = MockData.GetBrandAnalytics(fromDate, toDate);
+        filteredCategoryAnalytics = MockData.GetCategoryAnalytics(fromDate, toDate);
+    }
+
+
+}
