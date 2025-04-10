@@ -10,5 +10,5 @@ public class CustomerInfoDTO
     public string Name { get; set; }
 
     // This is a placeholder value.
-    public string Email = "placeholder@oms.test";
+    public string Email {get; set;} = "Placeholder@oms.dk";
 }

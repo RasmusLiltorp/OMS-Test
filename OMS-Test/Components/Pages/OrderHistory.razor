@@ -1,12 +1,12 @@
 @page "/OMS/OrderHistory"
 @using BlazorBootstrap
 @rendermode InteractiveServer
-@using OMS_Test.Services
-@inject MockDataService MockData
+@using OMS_Services
+@inject DataService DataService
 @inject NavigationManager Navigation
 @using DTOs
 
-<PageTitle>Order history</PageTitle>
+<PageTitle>Order History</PageTitle>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -63,11 +63,11 @@
                         <tbody>
                             @foreach (var order in filteredOrders)
                             {
-                                <tr @onclick="() => NavigateToOrderDetails(order.OrderId.ToString())" style="cursor: pointer;">
+                                <tr @onclick="() => NavigateToOrderDetails(order.OrderId)" style="cursor: pointer;">
                                     <td>@order.OrderId</td>
-                                    <td>@order.Customer</td>
-                                    <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
-                                    <td>@MockData.CalculateOrderTotal(order).ToString("0.00") DKK</td>
+                                    <td>@order.CustomerInfo.Name</td>
+                                    <td>@order.Date.ToString("dd MMM yyyy")</td>
+                                    <td>@DataService.CalculateOrdertotal(order).ToString("0.00") DKK</td>
                                 </tr>
                             }
                         </tbody>
@@ -88,34 +88,30 @@
     </div>
 </div>
 
-@code 
-{
-    private string? searchText = string.Empty;
-    private List<OrderLine>? orders;
-
+@code {
+    private string searchText = string.Empty;
     private int currentPage = 1;
     private int pageSize = 10;
-
-    protected override void OnInitialized()
-    {
-        orders = MockData.OrderLines;
-    }
-
-    private List<OrderLine> filteredOrders => pagedOrders.ToList();
-
-    private IEnumerable<OrderLine> pagedOrders =>
-        orders?
-            .Where(o => string.IsNullOrWhiteSpace(searchText) || o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
+    private List<OrderDTO> filteredOrders => pagedOrders.ToList();
+    private IEnumerable<OrderDTO> pagedOrders =>
+        DataService.OrderLines?
+            .Where(o => string.IsNullOrWhiteSpace(searchText) || o.OrderId.Contains(searchText, StringComparison.OrdinalIgnoreCase))
             .OrderBy(o => o.OrderId)
             .Skip((currentPage - 1) * pageSize)
             .Take(pageSize)
-        ?? Enumerable.Empty<OrderLine>();
+        ?? Enumerable.Empty<OrderDTO>();
 
-    private int totalFilteredCount => orders?
-        .Count(o => string.IsNullOrWhiteSpace(searchText) || o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
+    private int totalFilteredCount => DataService.OrderLines?
+        .Count(o => string.IsNullOrWhiteSpace(searchText) || o.OrderId.Contains(searchText, StringComparison.OrdinalIgnoreCase))
         ?? 0;
 
     private int totalPages => (int)Math.Ceiling((double)totalFilteredCount / pageSize);
+
+    protected override void OnInitialized()
+    {
+        // This ensures the DataService is initialized and has fetched the data.
+        // Consider using async initialization if DataService operations are asynchronous.
+    }
 
     private void SetPageSize(int size)
     {

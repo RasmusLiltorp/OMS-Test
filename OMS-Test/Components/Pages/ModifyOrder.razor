@@ -9,8 +9,8 @@
 <PageTitle>Modify Order</PageTitle>
 
 <div class="topnav">
-  <a href="./OMS/Manage">OMS</a>
-  <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+    <a href="./OMS/Manage">OMS</a>
+    <a href="./OMS/SalesReportsOverview">Sales Reports</a>
 </div>
 
 <h3>Modify Existing Order</h3>
@@ -18,7 +18,7 @@
 <div class="mb-4">
     <label class="form-label">Search & Select Order</label>
     <AutoComplete TItem="OrderDTO"
-                  @bind-Value="searchText"
+                  @bind-Value="selectedOrderId"
                   DataProvider="SearchOrdersProvider"
                   PropertyName="OrderId"
                   Placeholder="Search by order ID or customer name..."
@@ -34,111 +34,69 @@
 
         <div class="mb-3">
             <label class="form-label">Customer Name</label>
-            <InputText class="form-control" @bind-Value="selectedOrder.Customer" />
+            <InputText class="form-control" @bind-Value="selectedOrder.CustomerInfo.Name" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Order Date</label>
-            <InputDate class="form-control" @bind-Value="selectedOrder.OrderDate" />
+            <InputDate class="form-control" @bind-Value="selectedOrder.Date" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Track & Trace</label>
-            <InputText class="form-control" @bind-Value="selectedOrder.TrackAndTrace" placeholder="e.g. T123456789DK" />
+            <input type="text" class="form-control" @bind="trackingNumberValue" placeholder="e.g. T123456789DK" />
         </div>
 
         <h5>Products</h5>
-        @foreach (var product in selectedOrder.Products)
+        @foreach (var lineElement in selectedOrder.LineElements)
         {
             <div class="mb-3 row">
+                <div class="col-4">
+                    <select class="form-select" value="@lineElement.ProductUuid.ToString()" @onchange="(e) => OnProductChanged(e, lineElement)">
+                        <option disabled selected value="">Select product</option>
+                        @foreach (var product in DataService.Products)
+                        {
+                            <option value="@product.ProductID">@product.ProductName (@product.Price.ToString("C"))</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-2">
+                    <InputNumber class="form-control" @bind-Value="lineElement.Amount" min="1" />
+                </div>
+                <div class="col-3">
+                    <InputNumber class="form-control" @bind-Value="lineElement.Price" step="0.01" />
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(lineElement))">X</button>
+                </div>
             </div>
         }
+        <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
+
+        <div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-secondary ms-2" @onclick="CancelOrder">Cancel</button>
+        </div>
     </EditForm>
+}
+
+@if (showConfirmation)
+{
+    <div class="alert alert-success mt-3">Order updated successfully!</div>
 }
 
 @code {
     private OrderDTO? selectedOrder;
     private string selectedOrderId;
     private bool showConfirmation = false;
-    private string? searchText;
 
-    private void LoadSelectedOrder(ChangeEventArgs e)
-    {
-        if (e.Value?.ToString() is string id)
-        {
-            selectedOrderId = id;
-            var original = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == id);
-            if (original is null)
-                return;
-
-            selectedOrder = new OrderDTO
-            {
-                OrderId = original.OrderId,
-                Date = original.Date,
-                FulfillmentState = original.FulfillmentState,
-                TotalCost = original.TotalCost,
-                CustomerInfo = new CustomerInfoDTO
-                {
-                    CustomerId = original.CustomerInfo.CustomerId,
-                    Name = original.CustomerInfo.Name,
-                    Email = original.CustomerInfo.Email
-                },
-                ShippingInfo = new ShippingInfoDTO
-                {
-                    Address1 = original.ShippingInfo.Address1,
-                    Address2 = original.ShippingInfo.Address2,
-                    ZipcodeId = original.ShippingInfo.ZipcodeId,
-                    CountryId = original.ShippingInfo.CountryId,
-                    TrackingNumber = original.ShippingInfo.TrackingNumber
-                },
-                LineElements = original.LineElements.Select(le => new LineElementDTO
-                {
-                    ProductUuid = le.ProductUuid,
-                    Amount = le.Amount,
-                    Price = le.Price
-                }).ToList()
-            };
-
-
-            showConfirmation = false;
-        }
-    }
-
-    private void AddProduct()
-    {
-        if (selectedOrder?.LineElements is not null)
-        {
-            selectedOrder.LineElements.Add(new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 });
-        }
-    }
-
-    private void RemoveProduct(LineElementDTO item)
-    {
-        if(selectedOrder?.LineElements is not null)
-        {
-            selectedOrder.LineElements.Remove(item);
-        }
-    }
-
-    private void HandleValidSubmit()
-    {
-        if (selectedOrder is not null)
-        {
-            var index = DataService.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
-            if (index != -1)
-            {
-                DataService.OrderLines[index] = selectedOrder;
-                showConfirmation = true;
-            }
-        }
-    }
-
+    private string trackingNumberValue = string.Empty;
 
     private async Task<AutoCompleteDataProviderResult<OrderDTO>> SearchOrdersProvider(AutoCompleteDataProviderRequest<OrderDTO> request)
     {
         await Task.Delay(1); // tiny delay to simulate async
         string input = request.Filter?.Value?.ToString() ?? "";
-            var results = DataService.OrderLines
+        var results = DataService.OrderLines
             .Where(o => o.OrderId.Contains(input, StringComparison.OrdinalIgnoreCase)
                     || (o.CustomerInfo?.Name?.Contains(input, StringComparison.OrdinalIgnoreCase) ?? false))
             .ToList();
@@ -150,46 +108,19 @@
         };
     }
 
-      private void OnOrderSelected(OrderDTO selected)
+    private void OnOrderSelected(OrderDTO selected)
     {
-        selectedOrder = new OrderDTO
-        {
-            OrderId = selected.OrderId,
-            Date = selected.Date,
-            FulfillmentState = selected.FulfillmentState,
-            TotalCost = selected.TotalCost,
-            CustomerInfo = new CustomerInfoDTO
-            {
-                CustomerId = selected.CustomerInfo.CustomerId,
-                Name = selected.CustomerInfo.Name,
-                Email = selected.CustomerInfo.Email
-            },
-            ShippingInfo = new ShippingInfoDTO
-            {
-                Address1 = selected.ShippingInfo.Address1,
-                Address2 = selected.ShippingInfo.Address2,
-                ZipcodeId = selected.ShippingInfo.ZipcodeId,
-                CountryId = selected.ShippingInfo.CountryId,
-                TrackingNumber = selected.ShippingInfo.TrackingNumber
-            },
-            LineElements = selected.LineElements.Select(le => new LineElementDTO
-            {
-                ProductUuid = le.ProductUuid,
-                Amount = le.Amount,
-                Price = le.Price
-            }).ToList()
-        };
-
+        selectedOrder = selected;
         showConfirmation = false;
+        trackingNumberValue = string.Empty; 
     }
 
-        private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
+    private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
     {
         var productIdStr = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(productIdStr) && int.TryParse(productIdStr, out int productId))
+        if (!string.IsNullOrEmpty(productIdStr))
         {
-            item.ProductUuid = productId;
-            
+            item.ProductUuid = int.Parse(productIdStr);
             var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
             if (product != null)
             {
@@ -198,6 +129,34 @@
         }
     }
 
+    private void AddProduct()
+    {
+        if (selectedOrder?.LineElements is not null)
+        {
+            selectedOrder.LineElements.Add(new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0.00M });
+        }
+    }
+
+    private void RemoveProduct(LineElementDTO item)
+    {
+        if (selectedOrder?.LineElements is not null)
+        {
+            selectedOrder.LineElements.Remove(item);
+        }
+    }
+
+    private void HandleValidSubmit()
+    {
+        if (selectedOrder is not null)
+        {            
+            var index = DataService.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
+            if (index != -1)
+            {
+                DataService.OrderLines[index] = selectedOrder;
+                showConfirmation = true;
+            }
+        }
+    }
 
     private void CancelOrder()
     {

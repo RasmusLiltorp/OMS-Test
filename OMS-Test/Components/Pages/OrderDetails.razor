@@ -1,7 +1,7 @@
 @page "/oms/order/{OrderId}"
 @using BlazorBootstrap
-@using OMS_Test.Services
-@inject MockDataService MockData
+@using OMS_Services
+@inject DataService DataService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 @using DTOs
@@ -22,16 +22,15 @@
             {
                 <div class="card p-3" style="min-height: 200px;">
                     <p><strong>Order:</strong> @order.OrderId</p>
-                    <p><strong>Customer:</strong> @order.Customer</p>
-                    <p><strong>Date:</strong> @order.OrderDate.ToString("dd MMM yyyy")</p>
-                    <p><strong>Total Amount:</strong> @MockData.CalculateOrderTotal(order).ToString("0.00") DKK</p>
+                    <p><strong>Customer:</strong> @order.CustomerInfo.Name</p>
+                    <p><strong>Date:</strong> @order.Date.ToString("dd MMM yyyy")</p>
+                    <p><strong>Total Amount:</strong> @DataService.CalculateOrdertotal(order).ToString("0.00") DKK</p>
 
-                    @if (!string.IsNullOrWhiteSpace(order.TrackAndTrace))
+                    @if (!string.IsNullOrWhiteSpace(TrackingPlaceholder))
                     {
                         <p>
                             <strong>Track:</strong>
-                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=@order.TrackAndTrace" target="_blank">
-                                @order.TrackAndTrace
+                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=123124141414" target="_blank">
                             </a>
                         </p>
                     }
@@ -50,7 +49,7 @@
         <div class="col-md-6">
             <h3>Products in Order</h3>
 
-            @if (order != null && order.Products.Any())
+            @if (order != null && order.LineElements.Any())
             {
                 <div class="card p-3" style="min-height: 200px;">
                     <table class="table">
@@ -64,20 +63,20 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var orderProduct in order.Products)
+                            @foreach (var lineElement in order.LineElements)
                             {
-                                var product = MockData.Products?.FirstOrDefault(p => p.ProductID == orderProduct.ProductID);
+                                var product = DataService.Products?.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid.ToString());
                                 <tr>
-                                    <td>@orderProduct.ProductID</td>
+                                    <td>@lineElement.ProductUuid</td>
                                     <td>@(product?.ProductName ?? "Unknown")</td>
-                                    <td>@orderProduct.Quantity</td>
-                                    <td>@(orderProduct?.Price.ToString("0.00") ?? "0.00") DKK</td>
-                                    <td>@(orderProduct is not null ? (orderProduct.Price * orderProduct.Quantity).ToString("0.00") : "0.00") DKK</td>
+                                    <td>@lineElement.Amount</td>
+                                    <td>@(lineElement?.Price.ToString("0.00") ?? "0.00") DKK</td>
+                                    <td>@((lineElement.Price * lineElement.Amount).ToString("0.00")) DKK</td>
                                 </tr>
                             }
                             <tr class="table">
                                 <td colspan="4" class="text-end"><strong>Order Total:</strong></td>
-                                <td><strong>@(MockData.CalculateOrderTotal(order).ToString("0.00")) DKK</strong></td>
+                                <td><strong>@(DataService.CalculateOrdertotal(order).ToString("0.00")) DKK</strong></td>
                             </tr>
                         </tbody>
                     </table>
@@ -92,13 +91,16 @@
 </div>
 
 @code {
+
+    public string TrackingPlaceholder ="123456789";
+
     [Parameter]
     public string OrderId { get; set; }
 
-    private OrderLine? order;
+    private OrderDTO? order;
 
     protected override void OnInitialized()
     {
-        order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
+        order = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
     }
 }

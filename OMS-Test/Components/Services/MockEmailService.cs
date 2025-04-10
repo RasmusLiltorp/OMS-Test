@@ -7,23 +7,23 @@ namespace OMS_Services
 {
     public class SmtpEmailService : IEmailService
     {
-        private readonly MockDataService _mockData;
+        private readonly DataService _dataService;
 
-        public SmtpEmailService(MockDataService mockData)
+        public SmtpEmailService(DataService dataService)
         {
-            _mockData = mockData;
+            _dataService = dataService;
         }
 
         public async Task SendOrderReceiptAsync(OrderDTO order)
         {
-            if (order.CustomerInfo?.Email == null)
+            /*if (order.CustomerInfo.Email == null)
             {
                 Console.WriteLine("No customer email provided.");
                 return;
-            }
+            }*/
             
             var sb = new StringBuilder();
-            var total = _mockData.CalculateOrderTotal(order);
+            var total = _dataService.CalculateOrdertotal(order);
 
             sb.AppendLine("<!DOCTYPE html>");
             sb.AppendLine("<html><head><meta charset='UTF-8'><title>Receipt</title></head><body style='font-family: Arial, sans-serif;'>");
@@ -67,7 +67,7 @@ namespace OMS_Services
             int index = 1;
             foreach (var lineElement in order.LineElements)
             {
-                var product = _mockData.Products.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid.ToString());
+                var product = _dataService.Products.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid.ToString());
                 
                 if (product != null)
                 {
@@ -94,8 +94,9 @@ namespace OMS_Services
             sb.AppendLine("</div></body></html>");
 
             var mail = new MailMessage();
+            string email = "thisisaplaceholder@oms.dk";
             mail.From = new MailAddress("ArnesElektronik@gmail.com", "Arnes Elektronik");
-            mail.To.Add(order.CustomerInfo.Email);
+            mail.To.Add(email);
             mail.Subject = $"Receipt for Order #{order.OrderId}";
             mail.Body = sb.ToString();
             mail.IsBodyHtml = true;

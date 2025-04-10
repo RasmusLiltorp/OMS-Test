@@ -40,7 +40,10 @@
                                     <h5 class="font-size-16 mb-3">Billed To:</h5>
                                     <h5 class="font-size-15 mb-2">@order?.CustomerInfo.Name</h5>
                                     <p class="mb-1">@order?.ShippingInfo.Address1</p>
-                                    <p class="mb-1">@order?.CustomerInfo.Email</p>
+                                    @if (order?.CustomerInfo != null)
+                                    {
+                                        <p class="mb-1">@emailPlaceholder</p>
+                                    }                                    
                                     <p>+45 87 65 43 21</p>
                                 </div>
                             </div>
@@ -119,6 +122,9 @@
 </div>
 
 @code {
+
+    public string emailPlaceholder = "hejmeddig@rasmusliltorp.com";
+
     [Parameter]
     public string OrderId { get; set; }
 

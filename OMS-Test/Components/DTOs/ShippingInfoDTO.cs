@@ -17,5 +17,5 @@ public class ShippingInfoDTO
 
     // This is a placeholder value. 
     // In a real-world scenario, this would be dynamically generated or retrieved from a database.
-    public string TrackingNumber = "123456";
+    public string TrackingNumber { get; set; } = "12345678";
 }

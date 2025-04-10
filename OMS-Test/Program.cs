@@ -1,7 +1,6 @@
 using OMS_Test.Components;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.Extensions.DependencyInjection;
-using OMS_Test.Services;
 using OMS_Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +10,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 //add mockdata
-builder.Services.AddScoped<MockDataService>();
+builder.Services.AddScoped<DataService>();
 // Add circuit options configuration
 builder.Services.AddServerSideBlazor(options =>
 {

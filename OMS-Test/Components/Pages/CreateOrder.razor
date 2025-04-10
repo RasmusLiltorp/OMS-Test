@@ -133,9 +133,7 @@
     {
         if (newOrder.ShippingInfo == null)
             newOrder.ShippingInfo = new ShippingInfoDTO();
-            
-        newOrder.CustomerInfo.Email = paymentRecipient;
-        
+                    
         decimal totalCost = 0;
         foreach (var item in newOrder.LineElements)
         {
