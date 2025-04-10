@@ -17,6 +17,12 @@ class PIMApiService
     {
         try
         {
+            return new ProductDTO(){
+                ProductID =productId,
+                ProductName = "test",
+                Price = 123,
+                Weight = (decimal)1.23,
+            };
             var response = await _http.GetFromJsonAsync<ProductDTO>($"api/products/{productId}");
             if (response == null)
             {
@@ -41,7 +47,28 @@ class PIMApiService
 
     public async Task<List<ProductDTO?>> GetAllProductsAsync()
     {
-        try
+        return new List<ProductDTO?>(){
+            new(){
+                ProductID = Guid.NewGuid().ToString(),
+                ProductName = "test",
+                Price = 123,
+                Weight = (decimal)1.53,
+            },
+            new(){
+                ProductID = Guid.NewGuid().ToString(),
+                ProductName = "tes2",
+                Price = 1234,
+                Weight = (decimal)1.234,
+            },
+            new(){
+                ProductID = Guid.NewGuid().ToString(),
+                ProductName = "test3",
+                Price = 1235,
+                Weight = (decimal)1.235,
+            }
+            
+        };
+        /*try
         {
             int page = 10;
             var response = await _http.GetFromJsonAsync<List<ProductDTO>>($"api//products/list/{page}");
@@ -51,6 +78,6 @@ class PIMApiService
         {
             Console.WriteLine("Error fetching all products.");
             return null;
-        }
+        }*/
     }
 }

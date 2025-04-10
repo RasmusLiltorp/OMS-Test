@@ -28,7 +28,7 @@ public class DataService
         httpClient.BaseAddress = new Uri(baseUrl);
 
         _apiService = new ApiService(httpClient);
-       // _pimApiService = new PIMApiService(httpClient);
+        _pimApiService = new PIMApiService();
         
         InitializeDataAsync();
     }
