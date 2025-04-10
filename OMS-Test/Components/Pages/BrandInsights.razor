@@ -6,6 +6,8 @@
 @inject NavigationManager Navigation
 @inject IEmailService EmailService
 @using DTOs
+@using BlazorBootstrap.Components
+
 
 <PageTitle>Brand Insights</PageTitle>
 
@@ -14,77 +16,364 @@
     <a href="./OMS/SalesReportsOverview">Sales Reports</a>
 </div>
 
-<h5>Filter by Date Range</h5>
-<div class="mb-3 d-flex align-items-center gap-3">
-    <label>From:</label>
-    <InputDate @bind-Value="fromDate" class="form-control" />
-    <label>To:</label>
-    <InputDate @bind-Value="toDate" class="form-control" />
-    <button class="btn btn-primary" @onclick="FilterAnalytics">Apply</button>
+<h2>Brand Insights</h2>
+
+<h4>Select Periods to Compare</h4>
+
+<div class="d-flex flex-wrap align-items-end gap-4 mb-4">
+    <div class="d-flex align-items-center gap-2">
+        <strong>Period 1</strong>
+        <label>From:</label>
+        <InputDate @bind-Value="fromDate1" class="form-control" style="width: 150px;" />
+        <label>To:</label>
+        <InputDate @bind-Value="toDate1" class="form-control" style="width: 150px;" />
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <strong>Period 2</strong>
+        <label>From:</label>
+        <InputDate @bind-Value="fromDate2" class="form-control" style="width: 150px;" />
+        <label>To:</label>
+        <InputDate @bind-Value="toDate2" class="form-control" style="width: 150px;" />
+    </div>
 </div>
 
+<h5>Filters</h5>
+<div class="mb-3 d-flex align-items-end gap-3">
+    <div>
+        <label>Brand (only for Brand Comparison):</label>
+        <select class="form-select" @bind="selectedBrand">
+            <option value="">-- All Brands --</option>
+            @foreach (var brand in allBrands)
+            {
+                <option value="@brand">@brand</option>
+            }
+        </select>
+    </div>
 
-<h3>Brand Analytics</h3>
-<table class="table">
+    <div>
+        <label>Category (only for Category Comparison):</label>
+        <select class="form-select" @bind="selectedCategory">
+            <option value="">-- All Categories --</option>
+            @foreach (var category in allCategories)
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-primary" @onclick="CompareAnalytics">Apply & Compare</button>
+</div>
+
+<h3>Brand Analytics Comparison</h3>
+<table class="table table-bordered">
     <thead>
         <tr>
             <th>Brand</th>
-            <th>Total Units Sold</th>
-            <th>Total Revenue</th>
+            <th>Units Sold (P1)</th>
+            <th>Revenue (P1)</th>
+            <th>Units Sold (P2)</th>
+            <th>Revenue (P2)</th>
+            <th>Units Diff.</th>
+            <th>Revenue Diff.</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var brand in filteredBrandAnalytics)
+        @foreach (var brand in brandComparison)
         {
             <tr>
-                <td>@brand.BrandName</td>
-                <td>@brand.TotalUnitsSold</td>
-                <td>@brand.TotalRevenue.ToString("C")</td>
+                <td>
+                    <button class="btn btn-link p-0" @onclick="() => ShowBrandChart(brand.BrandName)">
+                        @brand.BrandName
+                    </button>
+                </td>
+                <td>@brand.Period1UnitsSold</td>
+                <td>@brand.Period1Revenue.ToString("C")</td>
+                <td>@brand.Period2UnitsSold</td>
+                <td>@brand.Period2Revenue.ToString("C")</td>
+                <td>@(brand.Period2UnitsSold - brand.Period1UnitsSold)</td>
+                <td>@((brand.Period2Revenue - brand.Period1Revenue).ToString("C"))</td>
             </tr>
         }
     </tbody>
-
 </table>
 
-<h3>Category Analytics</h3>
-<table class="table">
+<h3>Category Analytics Comparison</h3>
+<table class="table table-bordered">
     <thead>
         <tr>
             <th>Category</th>
-            <th>Total Units Sold</th>
-            <th>Total Revenue</th>
+            <th>Units Sold (P1)</th>
+            <th>Revenue (P1)</th>
+            <th>Units Sold (P2)</th>
+            <th>Revenue (P2)</th>
+            <th>Units Diff.</th>
+            <th>Revenue Diff.</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var category in filteredCategoryAnalytics)
+        @foreach (var category in categoryComparison)
         {
             <tr>
-                <td>@category.CategoryName</td>
-                <td>@category.TotalUnitsSold</td>
-                <td>@category.TotalRevenue.ToString("C")</td>
+                <td>
+                    <button class="btn btn-link p-0" @onclick="() => ShowCategoryChart(category.CategoryName)">
+                        @category.CategoryName
+                    </button>
+                </td>
+                <td>@category.Period1UnitsSold</td>
+                <td>@category.Period1Revenue.ToString("C")</td>
+                <td>@category.Period2UnitsSold</td>
+                <td>@category.Period2Revenue.ToString("C")</td>
+                <td>@(category.Period2UnitsSold - category.Period1UnitsSold)</td>
+                <td>@((category.Period2Revenue - category.Period1Revenue).ToString("C"))</td>
             </tr>
         }
     </tbody>
-
-
 </table>
 
+@if (showWormModal)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@modalTitle</h5>
+                    <button type="button" class="btn-close" @onclick="CloseWormModal"></button>
+                </div>
+                <div class="modal-body">
+                    <LineChart @ref="wormChart" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseWormModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+
 @code {
-    private DateOnly fromDate = new(2025, 3, 1);
-    private DateOnly toDate = new(2025, 3, 31);
-    private List<BrandAnalyticsDTO> filteredBrandAnalytics = new();
-    private List<CategoryAnalyticsDTO> filteredCategoryAnalytics = new();
+    private DateOnly fromDate1 = new(2025, 3, 1);
+    private DateOnly toDate1 = new(2025, 3, 15);
+    private DateOnly fromDate2 = new(2025, 3, 16);
+    private DateOnly toDate2 = new(2025, 3, 31);
+
+    private string selectedBrand = "";
+    private string selectedCategory = "";
+
+    private List<string> allBrands = new();
+    private List<string> allCategories = new();
+
+    private List<BrandComparisonDTO> brandComparison = new();
+    private List<CategoryComparisonDTO> categoryComparison = new();
+
+    private Modal? detailsModal;
+    private string modalTitle = "";
+    private List<WormChartDataPoint> chartData = new();
+
+    private List<BrandAnalyticsDTO> rawBrandDataPeriod1 = new();
+    private List<BrandAnalyticsDTO> rawBrandDataPeriod2 = new();
+    private List<CategoryAnalyticsDTO> rawCategoryDataPeriod1 = new();
+    private List<CategoryAnalyticsDTO> rawCategoryDataPeriod2 = new();
+
+    private LineChart wormChart = default!;
+
+    private bool showWormModal = false;
+
+    private void CloseWormModal()
+    {
+        showWormModal = false;
+    }
+
+
 
     protected override void OnInitialized()
     {
-        FilterAnalytics(); // populate initially
+        allBrands = MockData.GetAllBrands();
+        allCategories = MockData.GetAllCategories();
+        CompareAnalytics();
     }
 
-    private void FilterAnalytics()
+    private void CompareAnalytics()
     {
-        filteredBrandAnalytics = MockData.GetBrandAnalytics(fromDate, toDate);
-        filteredCategoryAnalytics = MockData.GetCategoryAnalytics(fromDate, toDate);
+        CompareBrandAnalytics();
+        CompareCategoryAnalytics();
     }
 
+    private void CompareBrandAnalytics()
+    {
+        rawBrandDataPeriod1 = MockData.GetBrandAnalytics(fromDate1, toDate1);
+        rawBrandDataPeriod2 = MockData.GetBrandAnalytics(fromDate2, toDate2);
+
+        var filtered1 = string.IsNullOrEmpty(selectedBrand)
+        ? rawBrandDataPeriod1
+        : rawBrandDataPeriod1.Where(b => b.BrandName == selectedBrand).ToList();
+
+        var filtered2 = string.IsNullOrEmpty(selectedBrand)
+        ? rawBrandDataPeriod2
+        : rawBrandDataPeriod2.Where(b => b.BrandName == selectedBrand).ToList();
+
+        brandComparison = filtered1.Select(a => a.BrandName)
+        .Union(filtered2.Select(a => a.BrandName))
+        .Distinct()
+        .Select(brand => new BrandComparisonDTO
+        {
+            BrandName = brand,
+            Period1UnitsSold = filtered1.FirstOrDefault(b => b.BrandName == brand)?.TotalUnitsSold ?? 0,
+            Period1Revenue = filtered1.FirstOrDefault(b => b.BrandName == brand)?.TotalRevenue ?? 0,
+            Period2UnitsSold = filtered2.FirstOrDefault(b => b.BrandName == brand)?.TotalUnitsSold ?? 0,
+            Period2Revenue = filtered2.FirstOrDefault(b => b.BrandName == brand)?.TotalRevenue ?? 0,
+        }).ToList();
+    }
+
+
+    private void CompareCategoryAnalytics()
+    {
+        rawCategoryDataPeriod1 = MockData.GetCategoryAnalytics(fromDate1, toDate1);
+        rawCategoryDataPeriod2 = MockData.GetCategoryAnalytics(fromDate2, toDate2);
+
+        var filtered1 = string.IsNullOrEmpty(selectedCategory)
+        ? rawCategoryDataPeriod1
+        : rawCategoryDataPeriod1.Where(c => c.CategoryName == selectedCategory).ToList();
+
+        var filtered2 = string.IsNullOrEmpty(selectedCategory)
+        ? rawCategoryDataPeriod2
+        : rawCategoryDataPeriod2.Where(c => c.CategoryName == selectedCategory).ToList();
+
+        categoryComparison = filtered1.Select(a => a.CategoryName)
+        .Union(filtered2.Select(a => a.CategoryName))
+        .Distinct()
+        .Select(category => new CategoryComparisonDTO
+        {
+            CategoryName = category,
+            Period1UnitsSold = filtered1.FirstOrDefault(c => c.CategoryName == category)?.TotalUnitsSold ?? 0,
+            Period1Revenue = filtered1.FirstOrDefault(c => c.CategoryName == category)?.TotalRevenue ?? 0,
+            Period2UnitsSold = filtered2.FirstOrDefault(c => c.CategoryName == category)?.TotalUnitsSold ?? 0,
+            Period2Revenue = filtered2.FirstOrDefault(c => c.CategoryName == category)?.TotalRevenue ?? 0,
+        }).ToList();
+    }
+
+    private async Task RenderWormChart()
+    {
+        var labels = chartData.Select(d => d.Label).ToList();
+
+        var data = new ChartData
+        {
+            Labels = labels,
+            Datasets = new List<IChartDataset>
+{
+new LineChartDataset
+{
+Label = $"{fromDate1:dd MMM} → {toDate1:dd MMM}",
+Data = chartData.Select(d => (double?)d.Period1Units).ToList(),
+BackgroundColor = "rgba(255, 99, 132, 0.2)",
+BorderColor = "rgba(255, 99, 132, 1)",
+BorderWidth = 2
+},
+new LineChartDataset
+{
+Label = $"{fromDate2:dd MMM} → {toDate2:dd MMM}",
+Data = chartData.Select(d => (double?)d.Period2Units).ToList(),
+BackgroundColor = "rgba(75, 192, 192, 0.2)",
+BorderColor = "rgba(75, 192, 192, 1)",
+BorderWidth = 2
+}
+}
+        };
+
+        var options = new LineChartOptions();
+
+        options.Responsive = true;
+
+        options.Interaction.Mode = InteractionMode.Index;
+
+        options.Plugins.Title!.Text = "Product Sales Comparison";
+        options.Plugins.Title.Display = true;
+        options.Plugins.Title.Font = new ChartFont { Size = 20 };
+
+        options.Scales.X!.Title = new ChartAxesTitle { Text = "Days", Display = true };
+        options.Scales.Y!.Title = new ChartAxesTitle { Text = "Units Sold", Display = true };
+
+        await wormChart.InitializeAsync(data, options);
+    }
+
+
+    private async Task ShowBrandChart(string brandName)
+    {
+        modalTitle = $"Comparison for {brandName}";
+
+        var period1 = MockData.GetDailyBrandUnitsSold(brandName, fromDate1, toDate1);
+        var period2 = MockData.GetDailyBrandUnitsSold(brandName, fromDate2, toDate2);
+
+        int days = Math.Max(period1.Count, period2.Count);
+
+        chartData = Enumerable.Range(0, days)
+        .Select(i => new WormChartDataPoint
+        {
+            Label = $"Day {i + 1}",
+            Period1Units = i < period1.Count ? period1[i].UnitsSold : 0,
+            Period2Units = i < period2.Count ? period2[i].UnitsSold : 0
+        }).ToList();
+
+        showWormModal = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(100);
+        await RenderWormChart();
+    }
+
+
+
+
+    private async Task ShowCategoryChart(string categoryName)
+    {
+        modalTitle = $"Comparison for {categoryName}";
+
+        var period1 = MockData.GetDailyCategoryUnitsSold(categoryName, fromDate1, toDate1);
+        var period2 = MockData.GetDailyCategoryUnitsSold(categoryName, fromDate2, toDate2);
+
+        int days = Math.Max(period1.Count, period2.Count);
+
+        chartData = Enumerable.Range(0, days)
+        .Select(i => new WormChartDataPoint
+        {
+            Label = $"Day {i + 1}",
+            Period1Units = i < period1.Count ? period1[i].UnitsSold : 0,
+            Period2Units = i < period2.Count ? period2[i].UnitsSold : 0
+        }).ToList();
+
+        showWormModal = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(100);
+        await RenderWormChart();
+    }
+
+
+
+    public class BrandComparisonDTO
+    {
+        public string BrandName { get; set; } = "";
+        public int Period1UnitsSold { get; set; }
+        public decimal Period1Revenue { get; set; }
+        public int Period2UnitsSold { get; set; }
+        public decimal Period2Revenue { get; set; }
+    }
+
+    public class CategoryComparisonDTO
+    {
+        public string CategoryName { get; set; } = "";
+        public int Period1UnitsSold { get; set; }
+        public decimal Period1Revenue { get; set; }
+        public int Period2UnitsSold { get; set; }
+        public decimal Period2Revenue { get; set; }
+    }
+
+    public class WormChartDataPoint
+    {
+        public string Label { get; set; } = "";
+        public double Period1Units { get; set; }
+        public double Period2Units { get; set; }
+    }
 
 }

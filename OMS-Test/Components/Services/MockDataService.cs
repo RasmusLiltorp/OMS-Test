@@ -222,7 +222,53 @@ namespace OMS_Test.Services
                 }).ToList();
         }
 
+        public List<string> GetAllBrands()
+        {
+            return Products.Select(p => p.BrandName).Distinct().ToList();
+        }
 
+        public List<string> GetAllCategories()
+        {
+            return Products.Select(p => p.ProductCategory).Distinct().ToList();
+        }
+
+        public List<(DateOnly Date, int UnitsSold)> GetDailyBrandUnitsSold(string brandName, DateOnly fromDate, DateOnly toDate)
+        {
+            var productIds = Products.Where(p => p.BrandName == brandName).Select(p => p.ProductID).ToList();
+            var dailyData = new List<(DateOnly, int)>();
+
+            for (var date = fromDate; date <= toDate; date = date.AddDays(1))
+            {
+                int unitsSold = OrderLines
+                    .Where(o => o.OrderDate == date)
+                    .SelectMany(o => o.Products)
+                    .Where(op => productIds.Contains(op.ProductID))
+                    .Sum(op => op.Quantity);
+
+                dailyData.Add((date, unitsSold));
+            }
+
+            return dailyData;
+        }
+
+        public List<(DateOnly Date, int UnitsSold)> GetDailyCategoryUnitsSold(string categoryName, DateOnly fromDate, DateOnly toDate)
+        {
+            var productIds = Products.Where(p => p.ProductCategory == categoryName).Select(p => p.ProductID).ToList();
+            var dailyData = new List<(DateOnly, int)>();
+
+            for (var date = fromDate; date <= toDate; date = date.AddDays(1))
+            {
+                int unitsSold = OrderLines
+                    .Where(o => o.OrderDate == date)
+                    .SelectMany(o => o.Products)
+                    .Where(op => productIds.Contains(op.ProductID))
+                    .Sum(op => op.Quantity);
+
+                dailyData.Add((date, unitsSold));
+            }
+
+            return dailyData;
+        }
 
 
     }
