@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
-using OMS_Test.Services;
+using OMS_Services;
 using DTOs;
 
-namespace OMS_Test.Services
+namespace OMS_Services
 {
     public interface IEmailService
     {

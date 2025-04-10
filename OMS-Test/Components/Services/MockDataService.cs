@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DTOs;
 
-namespace OMS_Test.Services
+namespace OMS_Services
 {
     /// <summary>
     /// Provides mock data for testing purposes

@@ -18,7 +18,7 @@ public class DataService
     public List<ProductDTO> Products { get; private set; }
 
 
-    public List<LineElementDTO> OrderLines { get; private set; } = new();
+    public List<OrderDTO> OrderLines { get; private set; } = new();
 
     public DataService(ApiService apiService)
     {
@@ -54,29 +54,27 @@ public class DataService
         } 
     }
 
-    private List<LineElementDTO> ConvertResponseToOrderLine(RootDTO apiResponses)
+    private List<OrderDTO> ConvertResponseToOrderLine(RootDTO apiResponses)
     {
-        var result = new List<LineElementDTO>();
+        var result = new List<OrderDTO>();
         if (apiResponses?.Data == null)
         {
             return result;
         }
-
-        foreach (var order in apiResponses.Data)
+        
+        foreach(var orderData in apiResponses.Data)
         {
-            if (order?.LineElements == null)
+            var order = new OrderDTO
             {
-                continue;
-            }
-            foreach (var line in order.LineElements)
-            {
-                result.Add(new LineElementDTO
-                {
-                    ProductUuid = line.ProductUuid,
-                    Amount = line.Amount,
-                    Price = line.Price
-                });
-            }
+                OrderId = orderData.OrderId,
+                LineElements = orderData.LineElements,
+                TotalCost = orderData.TotalCost,
+                Date = orderData.Date,
+                FulfillmentState = orderData.FulfillmentState,
+                CustomerInfo = orderData.CustomerInfo,
+                ShippingInfo = orderData.ShippingInfo
+            };
+            result.Add(order);
         }
 
         return result;
@@ -88,9 +86,14 @@ public class DataService
     public void ProductFromOrder()
     {
     }
-    public decimal CalculateOrdertotal()
+    public decimal CalculateOrdertotal(OrderDTO order)
     {
-        return 0;
+        decimal total = 0;
+        foreach (var lineElement in order.LineElements)
+        {
+            total += lineElement.Price * lineElement.Amount;
+        }
+        return total;
     }
     public decimal CalculateWeight()
     {

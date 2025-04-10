@@ -1,7 +1,7 @@
 ﻿@page "/OMS/Manage"
 @using BlazorBootstrap
-@using OMS_Test.Services
-@inject MockDataService MockData
+@using OMS_Services;
+@inject DataService DataService;
 @rendermode InteractiveServer
 @inject NavigationManager Navigation
 @inject IEmailService EmailService
@@ -78,9 +78,9 @@
                             {
                                 <tr>
                                     <td>@order.OrderId</td>
-                                    <td>@order.Customer</td>
-                                    <td>@order.OrderDate.ToString("dd MMM yyyy")</td>
-                                    <td>@MockData.CalculateOrderTotal(order).ToString("0.00") DKK</td>
+                                    <td>@order.CustomerInfo.Name</td>
+                                    <td>@order.Date.ToString("dd MMM yyyy")</td>
+                                    <td>@DataService.CalculateOrdertotal(order).ToString("0.00") DKK</td>
                                     <td colspan="2">
                                         <div class="d-flex justify-content-end flex-column flex-md-row gap-1">
                                             <button class="btn btn-sm btn-outline-success w-5" @onclick="() => SendReceipt(order.OrderId)">
@@ -126,7 +126,7 @@
                                     @foreach (var order in FilteredDeleteOrders)
                                     {
                                         <option value="@order.OrderId">
-                                            Order #@order.OrderId - @order.Customer
+                                            Order #@order.OrderId - @order.CustomerInfo?.Name
                                         </option>
                                     }
                                 </select>
@@ -151,7 +151,7 @@
 
 @code {
     private string? searchText = string.Empty;
-    private List<OrderLine>? orders;
+    private List<OrderDTO>? orders;
 
     private int currentPage = 1;
     private int pageSize = 10;
@@ -160,7 +160,7 @@
 
     protected override void OnInitialized()
     {
-        orders = MockData.OrderLines ?? new List<OrderLine>();
+        orders = DataService.OrderLines ?? new List<OrderDTO>();
     }
 
     private void OnSearchTextChanged(ChangeEventArgs e)
@@ -169,24 +169,24 @@
         currentPage = 1;
     }
 
-    private List<OrderLine> filteredOrders => pagedOrders.ToList();
+    private List<OrderDTO> filteredOrders => pagedOrders.ToList();
 
-    private IEnumerable<OrderLine> pagedOrders =>
+    private IEnumerable<OrderDTO> pagedOrders =>
         orders?
             .Where(o =>
                 string.IsNullOrWhiteSpace(searchText) ||
                 o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-                (o.Customer?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+                (o.CustomerInfo.Name?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
             .OrderBy(o => o.OrderId)
             .Skip((currentPage - 1) * pageSize)
             .Take(pageSize)
-        ?? Enumerable.Empty<OrderLine>();
+        ?? Enumerable.Empty<OrderDTO>();
 
     private int totalFilteredCount => orders?
         .Count(o =>
             string.IsNullOrWhiteSpace(searchText) ||
             o.OrderId.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
-            (o.Customer?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+            (o.CustomerInfo.Name?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
         ?? 0;
 
     private int totalPages => (int)Math.Ceiling((double)totalFilteredCount / pageSize);
@@ -214,13 +214,13 @@
     private string? selectedDeleteOrderId;
     private string? deleteMessage;
 
-    private IEnumerable<OrderLine> FilteredDeleteOrders =>
+    private IEnumerable<OrderDTO> FilteredDeleteOrders =>
         string.IsNullOrWhiteSpace(deleteSearchText)
             ? orders!.Take(10)
             : orders!
                 .Where(o =>
                     o.OrderId.ToString().Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ||
-                    (o.Customer?.Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ?? false))
+                    (o.CustomerInfo.Name?.Contains(deleteSearchText, StringComparison.OrdinalIgnoreCase) ?? false))
                 .Take(10);
 
     private void OpenDeleteModal()
@@ -243,10 +243,10 @@
     {
         if (selectedDeleteOrderId != null)
         {
-            var orderToDelete = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == selectedDeleteOrderId);
+            var orderToDelete = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == selectedDeleteOrderId);
             if (orderToDelete != null)
             {
-                MockData.OrderLines?.Remove(orderToDelete);
+                DataService.OrderLines?.Remove(orderToDelete);
                 deleteMessage = $"Order #{orderToDelete.OrderId} deleted successfully.";
                 selectedDeleteOrderId = null;
 
@@ -267,7 +267,7 @@
 
     private async Task SendReceipt(string orderId)
     {
-        var order = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == orderId);
+        var order = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == orderId);
         if (order != null)
         {
             await EmailService.SendOrderReceiptAsync(order);

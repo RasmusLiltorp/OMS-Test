@@ -1,10 +1,10 @@
 @page "/OMS/ModifyOrder"
-@using OMS_Test.Services
-@inject MockDataService MockData
+@using OMS_Services;
+@inject DataService DataService
 @rendermode InteractiveServer
 @using BlazorBootstrap
 @inject NavigationManager NavigationManager
-@using DTOs
+@using DTOs;
 
 <PageTitle>Modify Order</PageTitle>
 
@@ -17,7 +17,7 @@
 
 <div class="mb-4">
     <label class="form-label">Search & Select Order</label>
-    <AutoComplete TItem="OrderLine"
+    <AutoComplete TItem="OrderDTO"
                   @bind-Value="searchText"
                   DataProvider="SearchOrdersProvider"
                   PropertyName="OrderId"
@@ -51,44 +51,13 @@
         @foreach (var product in selectedOrder.Products)
         {
             <div class="mb-3 row">
-                <div class="col-4">
-                    <select class="form-select" value="@product.ProductID" @onchange="(e) => OnProductChanged(e, product)">
-                        <option disabled selected value="">Select product</option>
-                        @foreach (var p in MockData.Products)
-                        {
-                            <option value="@p.ProductID">@p.ProductName (@p.Price.ToString("C"))</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-2">
-                    <InputNumber class="form-control" @bind-Value="product.Quantity" min="1" />
-                </div>
-                <div class="col-3">
-                    <InputNumber class="form-control" @bind-Value="product.Price" step="0.01" />
-                </div>
-                <div class="col-2">
-                    <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(product))">X</button>
-                </div>
             </div>
-
         }
-
-        <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
-
-        <div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-            <button type="button" class="btn btn-secondary ms-2" @onclick="CancelOrder">Cancel</button>
-        </div>
     </EditForm>
 }
 
-@if (showConfirmation)
-{
-    <div class="alert alert-success mt-3">Order updated successfully!</div>
-}
-
 @code {
-    private OrderLine? selectedOrder;
+    private OrderDTO? selectedOrder;
     private string selectedOrderId;
     private bool showConfirmation = false;
     private string? searchText;
@@ -98,19 +67,36 @@
         if (e.Value?.ToString() is string id)
         {
             selectedOrderId = id;
-            var original = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == id);
+            var original = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == id);
             if (original is null)
                 return;
 
-            selectedOrder = new OrderLine
+            selectedOrder = new OrderDTO
             {
                 OrderId = original.OrderId,
-                Customer = original.Customer,
-                OrderDate = original.OrderDate,
-                TrackAndTrace = original.TrackAndTrace,
-                Products = original.Products
-                    .Select(p => new OrderProduct { ProductID = p.ProductID, Quantity = p.Quantity, Price = p.Price })
-                    .ToList()
+                Date = original.Date,
+                FulfillmentState = original.FulfillmentState,
+                TotalCost = original.TotalCost,
+                CustomerInfo = new CustomerInfoDTO
+                {
+                    CustomerId = original.CustomerInfo.CustomerId,
+                    Name = original.CustomerInfo.Name,
+                    Email = original.CustomerInfo.Email
+                },
+                ShippingInfo = new ShippingInfoDTO
+                {
+                    Address1 = original.ShippingInfo.Address1,
+                    Address2 = original.ShippingInfo.Address2,
+                    ZipcodeId = original.ShippingInfo.ZipcodeId,
+                    CountryId = original.ShippingInfo.CountryId,
+                    TrackingNumber = original.ShippingInfo.TrackingNumber
+                },
+                LineElements = original.LineElements.Select(le => new LineElementDTO
+                {
+                    ProductUuid = le.ProductUuid,
+                    Amount = le.Amount,
+                    Price = le.Price
+                }).ToList()
             };
 
 
@@ -120,82 +106,94 @@
 
     private void AddProduct()
     {
-        if (selectedOrder?.Products is not null)
+        if (selectedOrder?.LineElements is not null)
         {
-            selectedOrder.Products.Add(new OrderProduct { ProductID = "", Quantity = 1 });
+            selectedOrder.LineElements.Add(new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 });
         }
     }
 
-    private void RemoveProduct(OrderProduct product)
+    private void RemoveProduct(LineElementDTO item)
     {
-        selectedOrder?.Products.Remove(product);
+        if(selectedOrder?.LineElements is not null)
+        {
+            selectedOrder.LineElements.Remove(item);
+        }
     }
 
     private void HandleValidSubmit()
     {
         if (selectedOrder is not null)
         {
-            var index = MockData.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
+            var index = DataService.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
             if (index != -1)
             {
-                MockData.OrderLines[index] = selectedOrder;
+                DataService.OrderLines[index] = selectedOrder;
                 showConfirmation = true;
             }
         }
     }
 
 
-    private async Task<AutoCompleteDataProviderResult<OrderLine>> SearchOrdersProvider(AutoCompleteDataProviderRequest<OrderLine> request)
+    private async Task<AutoCompleteDataProviderResult<OrderDTO>> SearchOrdersProvider(AutoCompleteDataProviderRequest<OrderDTO> request)
     {
         await Task.Delay(1); // tiny delay to simulate async
         string input = request.Filter?.Value?.ToString() ?? "";
-
-        var results = MockData.OrderLines
-            .Where(o => o.OrderId.ToString().Contains(input, StringComparison.OrdinalIgnoreCase)
-                     || o.Customer.Contains(input, StringComparison.OrdinalIgnoreCase))
+            var results = DataService.OrderLines
+            .Where(o => o.OrderId.Contains(input, StringComparison.OrdinalIgnoreCase)
+                    || (o.CustomerInfo?.Name?.Contains(input, StringComparison.OrdinalIgnoreCase) ?? false))
             .ToList();
 
-        return new AutoCompleteDataProviderResult<OrderLine>
+        return new AutoCompleteDataProviderResult<OrderDTO>
         {
             Data = results,
             TotalCount = results.Count
         };
     }
 
-    private void OnOrderSelected(OrderLine selected)
+      private void OnOrderSelected(OrderDTO selected)
     {
-        var original = MockData.OrderLines?.FirstOrDefault(o => o.OrderId == selected.OrderId);
-        if (original is null)
-            return;
-
-        selectedOrder = new OrderLine
+        selectedOrder = new OrderDTO
         {
-            OrderId = original.OrderId,
-            Customer = original.Customer,
-            OrderDate = original.OrderDate,
-            TrackAndTrace = original.TrackAndTrace,
-            Products = original.Products
-                .Select(p => new OrderProduct { ProductID = p.ProductID, Quantity = p.Quantity, Price = p.Price })
-                .ToList()
+            OrderId = selected.OrderId,
+            Date = selected.Date,
+            FulfillmentState = selected.FulfillmentState,
+            TotalCost = selected.TotalCost,
+            CustomerInfo = new CustomerInfoDTO
+            {
+                CustomerId = selected.CustomerInfo.CustomerId,
+                Name = selected.CustomerInfo.Name,
+                Email = selected.CustomerInfo.Email
+            },
+            ShippingInfo = new ShippingInfoDTO
+            {
+                Address1 = selected.ShippingInfo.Address1,
+                Address2 = selected.ShippingInfo.Address2,
+                ZipcodeId = selected.ShippingInfo.ZipcodeId,
+                CountryId = selected.ShippingInfo.CountryId,
+                TrackingNumber = selected.ShippingInfo.TrackingNumber
+            },
+            LineElements = selected.LineElements.Select(le => new LineElementDTO
+            {
+                ProductUuid = le.ProductUuid,
+                Amount = le.Amount,
+                Price = le.Price
+            }).ToList()
         };
 
         showConfirmation = false;
     }
 
-    private void OnProductChanged(ChangeEventArgs e, OrderProduct product)
+        private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
     {
-        var newProductId = e.Value?.ToString();
-        if (!string.IsNullOrWhiteSpace(newProductId))
+        var productIdStr = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(productIdStr) && int.TryParse(productIdStr, out int productId))
         {
-            product.ProductID = newProductId;
-
-            if (product.Price == 0)
+            item.ProductUuid = productId;
+            
+            var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
+            if (product != null)
             {
-                var selected = MockData.Products.FirstOrDefault(p => p.ProductID == newProductId);
-                if (selected != null)
-                {
-                    product.Price = selected.Price;
-                }
+                item.Price = product.Price;
             }
         }
     }
@@ -205,6 +203,4 @@
     {
         NavigationManager.NavigateTo("/OMS/Manage");
     }
-
-
 }
