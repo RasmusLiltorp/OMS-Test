@@ -20,9 +20,16 @@ public class DataService
 
     public List<OrderDTO> OrderLines { get; private set; } = new();
 
-    public DataService(ApiService apiService)
+    public DataService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
-        _apiService = new ApiService(new HttpClient());    
+        var baseUrl = configuration["BackendSettings:BaseUrl"] ?? "http://localhost:4300/";
+        
+        var httpClient = httpClientFactory.CreateClient();
+        httpClient.BaseAddress = new Uri(baseUrl);
+
+        _apiService = new ApiService(httpClient);
+       // _pimApiService = new PIMApiService(httpClient);
+        
         InitializeDataAsync();
     }
 
