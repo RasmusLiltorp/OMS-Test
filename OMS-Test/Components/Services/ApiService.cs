@@ -31,10 +31,12 @@ public class ApiService
     {
         try
         {
+            Console.WriteLine(nameof(GetMultipleOrdersAsync));
             var response = await _http.GetFromJsonAsync<RootDTO>(
                 $"api/order/?amount={amount}",
                 _jsonOptions
             );
+            Console.WriteLine("Post Json Deserialize " + nameof(GetMultipleOrdersAsync));
             if (response == null || response.Data == null || response.Status != "Success")
             {
                 Console.WriteLine("Error: No orders found or error occurred while fetching orders.");
@@ -96,10 +98,12 @@ public class ApiService
     {
         try
         {
+            Console.WriteLine(nameof(GetOrderAsync));
             var response = await _http.GetFromJsonAsync<RootDTO>(
                 $"api/order/{orderID}",
                 _jsonOptions
             );
+            Console.WriteLine("Post Json Deserialize " + nameof(GetOrderAsync));
             if (response == null || response.Data == null || response.Status != "Success")
             {
                 return new RootDTO

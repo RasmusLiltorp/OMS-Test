@@ -17,6 +17,7 @@ class PIMApiService
     {
         try
         {
+            Console.WriteLine($"Fetching product {productId}...");
             return new ProductDTO(){
                 ProductID =productId,
                 ProductName = "test",
@@ -47,6 +48,7 @@ class PIMApiService
 
     public async Task<List<ProductDTO?>> GetAllProductsAsync()
     {
+        Console.WriteLine("Fetching all products...");
         return new List<ProductDTO?>(){
             new(){
                 ProductID = Guid.NewGuid().ToString(),

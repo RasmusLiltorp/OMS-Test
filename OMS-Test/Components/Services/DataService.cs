@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,7 +17,8 @@ public class DataService
     private readonly ApiService _apiService;
     private readonly PIMApiService _pimApiService;
     public List<ProductDTO> Products { get; private set; }
-
+    private readonly SemaphoreSlim _dataInitLock = new SemaphoreSlim(1, 1);
+    private bool _isInitialized = false;
 
     public List<OrderDTO> OrderLines { get; private set; } = new();
 
@@ -33,32 +35,46 @@ public class DataService
         InitializeDataAsync();
     }
 
-    private async void InitializeDataAsync()
+    private async Task InitializeDataAsync()
     {
-        var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
-        if (ordersFromApi != null)
+        await _dataInitLock.WaitAsync();
+        try
         {
-            OrderLines = ConvertResponseToOrderLine(ordersFromApi);
-        }
-        else
-        {
-            Console.WriteLine("No orders found or error occurred while fetching orders.");
-        }
+            if(!_isInitialized)
+            {
+                Console.WriteLine("Initializing data...");
+                var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
+                if (ordersFromApi != null)
+                {
+                    OrderLines = ConvertResponseToOrderLine(ordersFromApi);
+                }
+                else
+                {
+                    Console.WriteLine("No orders found or error occurred while fetching orders.");
+                }
+                // Initilize all products
+                var productsResult = await _pimApiService.GetAllProductsAsync();
+                Console.WriteLine("Called GetAllProductsAsync");
+                if (productsResult != null)
+                {
+                    var nonNullProducts = productsResult
+                        .Where(p => p != null)
+                        .Cast<ProductDTO>()
+                        .ToList();
+                    Products = nonNullProducts;
+                }
+                else
+                {
+                    Products = new List<ProductDTO>();
+                } 
+                _isInitialized = true;
 
-        // Initilize all products
-        var productsResult = await _pimApiService.GetAllProductsAsync();
-        if (productsResult != null)
-        {
-            var nonNullProducts = productsResult
-                .Where(p => p != null)
-                .Cast<ProductDTO>()
-                .ToList();
-            Products = nonNullProducts;
+            }
         }
-        else
+        finally
         {
-            Products = new List<ProductDTO>();
-        } 
+            _dataInitLock.Release();
+        }
     }
 
     private List<OrderDTO> ConvertResponseToOrderLine(RootDTO apiResponses)
@@ -81,9 +97,10 @@ public class DataService
                 CustomerInfo = orderData.CustomerInfo,
                 ShippingInfo = orderData.ShippingInfo
             };
+            Console.WriteLine($"Order added - ID: {order.OrderId}, Total Cost: {order.TotalCost}");
             result.Add(order);
         }
-
+        Console.WriteLine($"Total orders added: {result.Count}. ");
         return result;
     }
 
