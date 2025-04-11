@@ -9,8 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-//add mockdata
+//add dataservice
 builder.Services.AddScoped<DataService>();
+
 // Add circuit options configuration
 builder.Services.AddServerSideBlazor(options =>
 {

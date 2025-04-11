@@ -160,6 +160,7 @@
 
     protected override void OnInitialized()
     {
+        DataService.OrdersFetched += OrdersHasFetched;
         orders = DataService.OrderLines ?? new List<OrderDTO>();
     }
 
@@ -273,7 +274,7 @@
             await EmailService.SendOrderReceiptAsync(order);
             sendMessage = $"Receipt for Order #{order.OrderId} has been sent.";
             StateHasChanged();
-            await Task.Delay(3000); // Optional: auto-hide after 3 sec
+            await Task.Delay(1000);
             sendMessage = null;
             StateHasChanged();
         }
@@ -282,5 +283,11 @@
     private void ViewReceipt(string orderId)
     {
         Navigation.NavigateTo($"/OMS/Receipt/{orderId}");
+    }
+
+    public void OrdersHasFetched(object? sender, EventArgs e){
+        Console.WriteLine(nameof(OrdersHasFetched) + " OMS");
+        orders = DataService.OrderLines;
+        StateHasChanged();
     }
 }

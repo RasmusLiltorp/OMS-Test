@@ -21,6 +21,7 @@ public class DataService
     private bool _isInitialized = false;
 
     public List<OrderDTO> OrderLines { get; private set; } = new();
+    public event EventHandler OrdersFetched;
 
     public DataService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
@@ -74,6 +75,7 @@ public class DataService
         finally
         {
             _dataInitLock.Release();
+            OrdersFetched.Invoke(this, EventArgs.Empty);
         }
     }
 

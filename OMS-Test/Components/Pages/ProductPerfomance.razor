@@ -94,6 +94,7 @@
     protected override void OnInitialized()
     {
         searchResults = new List<OrderDTO>();
+        DataService.OrdersFetched += OrdersHasFetched;
     }
 
     private void PerformSearch()
@@ -119,5 +120,9 @@
     private void NavigateToOrderDetails(string orderId)
     {
         NavigationManager.NavigateTo($"/oms/order/{orderId}");
+    }
+
+    public void OrdersHasFetched(object? sender, EventArgs e){
+        StateHasChanged();
     }
 }

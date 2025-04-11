@@ -109,8 +109,7 @@
 
     protected override void OnInitialized()
     {
-        // This ensures the DataService is initialized and has fetched the data.
-        // Consider using async initialization if DataService operations are asynchronous.
+        DataService.OrdersFetched += OrdersHasFetched;
     }
 
     private void SetPageSize(int size)
@@ -140,5 +139,9 @@
     {
         searchText = e.Value?.ToString();
         currentPage = 1;
+    }
+
+    public void OrdersHasFetched(object? sender, EventArgs e){
+        StateHasChanged();
     }
 }

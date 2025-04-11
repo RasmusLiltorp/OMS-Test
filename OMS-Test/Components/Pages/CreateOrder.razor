@@ -3,6 +3,7 @@
 @using OMS_Services
 @inject DataService DataService
 @inject ApiService ApiService
+@using System.Text.Json
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @using DTOs
@@ -25,9 +26,25 @@
         <InputText class="form-control" @bind-Value="newOrder.CustomerInfo.Name" />
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Order Date</label>
-        <InputDate class="form-control" @bind-Value="newOrder.Date" />
+    <div>
+        <label class="=form-label">Address</label>
+        <InputText class="form-control" @bind-Value="newOrder.ShippingInfo.Address1" />
+    </div>
+
+    <div>
+        <label class="=form-label">Address 2 (optional)</label>
+        <InputText class="form-control" @bind-Value="newOrder.ShippingInfo.Address2" />
+    </div>
+
+    <div>
+        <label class="=form-label">Zipcode</label>
+        <InputNumber class="form-control" @bind-Value="newOrder.ShippingInfo.ZipcodeId" />
+    </div>
+
+
+    <div>
+        <label class="form-label">Country</label>
+        <InputNumber class="form-control" @bind-Value="newOrder.ShippingInfo.CountryId" />
     </div>
 
     <h5>Products</h5>
@@ -109,19 +126,20 @@
     private bool paymentLinkSent = false;
     private OrderDTO newOrder = new OrderDTO
     {
-        CustomerInfo = new CustomerInfoDTO { Name = "" },
+        CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },
         ShippingInfo = new ShippingInfoDTO(),
-        LineElements = new List<LineElementDTO> 
-        {    
-            new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 } 
-        },
+        LineElements = new List<LineElementDTO>(),
         Date = DateTime.Today
     };
     private bool showConfirmation = false;
 
     private void AddProduct()
     {
-        newOrder.LineElements.Add(new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 });
+        newOrder.LineElements.Add(new LineElementDTO {
+            ProductUuid = 0,
+            Amount = 1,
+            Price = 0
+        });
     }
 
     private void RemoveProduct(LineElementDTO product)
@@ -131,9 +149,12 @@
 
     private async Task HandleValidSubmit()
     {
-        if (newOrder.ShippingInfo == null)
+        newOrder.CustomerInfo = new CustomerInfoDTO {Name = newOrder.CustomerInfo.Name, CustomerId = Guid.NewGuid().ToString()};
+
+        if (newOrder.ShippingInfo == null){
             newOrder.ShippingInfo = new ShippingInfoDTO();
-                    
+        }
+
         decimal totalCost = 0;
         foreach (var item in newOrder.LineElements)
         {
@@ -141,23 +162,28 @@
         }
         newOrder.TotalCost = totalCost;
         
+        Guid orderId = Guid.NewGuid();
+    
+        Console.WriteLine(JsonSerializer.Serialize<OrderDTO>(newOrder));
+
         var result = await ApiService.PostOrderLineToBackend(newOrder);
         
         showConfirmation = true;
         
-        // Reset for a new order
-        newOrder = new OrderDTO
-        {
-            CustomerInfo = new CustomerInfoDTO { Name = "" },
-            ShippingInfo = new ShippingInfoDTO(),
-            LineElements = new List<LineElementDTO>
-            {
-                new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0 }
-            },
-            Date = DateTime.Today
-        };
-        paymentLinkSent = false;
+        ResetOrderForm();
     }
+
+    private void ResetOrderForm()
+{
+    newOrder = new OrderDTO
+    {
+        CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },
+        ShippingInfo = new ShippingInfoDTO(),
+        LineElements = new List<LineElementDTO>(),
+        Date = DateTime.Today
+    };
+    paymentLinkSent = false;
+}
 
     private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
     {

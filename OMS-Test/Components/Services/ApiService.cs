@@ -88,7 +88,7 @@ public class ApiService
         }
         catch
         {
-            Console.WriteLine($"Error: Could not patch order {orderId}.");
+                Console.WriteLine($"Error: Could not patch order {orderId}.");
                 return new RootDTO { Status = "Exception", Data = null };
         }
 
@@ -169,8 +169,9 @@ public class ApiService
         {
             var json = JsonSerializer.Serialize(orderDto, _jsonOptions);
             var response = await _http.PostAsJsonAsync("api/order/", orderDto, _jsonOptions);
+            Console.WriteLine($"Sending order: {json}");
 
-            if (response == null || response.StatusCode != System.Net.HttpStatusCode.OK)
+            if (response == null)
             {
                 Console.WriteLine("Error: Could not post orderline to backend.");
                 return new RootDTO
@@ -179,6 +180,7 @@ public class ApiService
                     Data = null
                 };
             }
+            Console.WriteLine($"Response status: {response.StatusCode}, {await response.Content.ReadAsStringAsync()}");
 
             var result = await response.Content.ReadFromJsonAsync<RootDTO>(_jsonOptions);
             if (result == null)
