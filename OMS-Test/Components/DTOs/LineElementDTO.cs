@@ -4,7 +4,7 @@ using DTOs;
 public class LineElementDTO
 {
     [JsonPropertyName("product-uuid")]
-    public int ProductUuid { get; set; }
+    public required string ProductUuid { get; set; }
 
     [JsonPropertyName("amount")]
     public int Amount { get; set; }

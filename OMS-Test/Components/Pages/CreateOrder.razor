@@ -52,15 +52,15 @@
     {
         <div class="mb-3 row">
             <div class="col-4">
-                <select class="form-select" value="@item.ProductUuid" @onchange="(e) => OnProductChanged(e, item)">
-                    <option disabled selected value="">Select product</option>
-                    @foreach (var product in DataService.Products)
-                    {
-                        <option value="@product.ProductID">
-                            @product.ProductName (@product.Price.ToString("C"))
-                        </option>
-                    }
-                </select>
+            <select class="form-select" value="@item.ProductUuid" @onchange="(e) => OnProductChanged(e, item)">
+                <option disabled selected value="">Select product</option>
+                @foreach (var product in DataService.Products)
+                {
+                    <option value="@product.ProductID">
+                        @product.ProductName (@product.Price.ToString("C"))
+                    </option>
+                }
+            </select>
             </div>
             <div class="col-2">
                 <InputNumber class="form-control" @bind-Value="item.Amount" min="1" />
@@ -136,10 +136,11 @@
     private void AddProduct()
     {
         newOrder.LineElements.Add(new LineElementDTO {
-            ProductUuid = 0,
+            ProductUuid = "1", 
             Amount = 1,
             Price = 0
         });
+        StateHasChanged();
     }
 
     private void RemoveProduct(LineElementDTO product)
@@ -193,19 +194,38 @@
     paymentLinkSent = false;
 }
 
-    private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
+
+ private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
+{
+    var selectedValueStr = e.Value?.ToString(); 
+
+    if (!string.IsNullOrEmpty(selectedValueStr))
     {
-        var productIdStr = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(productIdStr) && int.TryParse(productIdStr, out int productId))
+        var product = DataService.Products.FirstOrDefault(p => p.ProductID == selectedValueStr);
+
+        if (product != null)
         {
-            item.ProductUuid = productId;
-            var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
-            if (product != null)
+            item.ProductUuid = selectedValueStr;
+            item.Price = product.Price;       
+            if (item.Amount < 1)
             {
-                item.Price = product.Price;
+                item.Amount = 1;
             }
         }
+        else
+        {
+            item.ProductUuid = "1"; 
+            item.Price = 0;
+        }
     }
+    else
+    {
+        item.ProductUuid = "1"; 
+        item.Price = 0;
+    }
+
+    StateHasChanged();
+}
 
     private void CancelOrder()
     {

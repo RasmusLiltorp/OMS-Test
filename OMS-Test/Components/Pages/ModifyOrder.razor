@@ -120,7 +120,7 @@
         var productIdStr = e.Value?.ToString();
         if (!string.IsNullOrEmpty(productIdStr))
         {
-            item.ProductUuid = int.Parse(productIdStr);
+            item.ProductUuid = productIdStr;
             var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
             if (product != null)
             {
@@ -133,7 +133,7 @@
     {
         if (selectedOrder?.LineElements is not null)
         {
-            selectedOrder.LineElements.Add(new LineElementDTO { ProductUuid = 0, Amount = 1, Price = 0.00M });
+            selectedOrder.LineElements.Add(new LineElementDTO { ProductUuid = "1", Amount = 1, Price = 0.00M });
         }
     }
 
@@ -163,3 +163,4 @@
         NavigationManager.NavigateTo("/OMS/Manage");
     }
 }
+ 

@@ -19,7 +19,7 @@ class PIMApiService
         {
             Console.WriteLine($"Fetching product {productId}...");
             return new ProductDTO(){
-                ProductID =productId,
+                ProductID = productId,
                 ProductName = "test",
                 Price = 123,
                 Weight = (decimal)1.23,
