@@ -163,6 +163,11 @@
         newOrder.TotalCost = totalCost;
         
         Guid orderId = Guid.NewGuid();
+
+        if (newOrder.ShippingInfo.Address2 == null)
+        {
+            newOrder.ShippingInfo.Address2 = "";
+        }
     
         Console.WriteLine(JsonSerializer.Serialize<OrderDTO>(newOrder));
 
@@ -171,10 +176,13 @@
         showConfirmation = true;
         
         ResetOrderForm();
+
+        await DataService.InitializeDataAsync();
+        StateHasChanged();
     }
 
     private void ResetOrderForm()
-{
+    {
     newOrder = new OrderDTO
     {
         CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },

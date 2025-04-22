@@ -286,7 +286,6 @@
     }
 
     public void OrdersHasFetched(object? sender, EventArgs e){
-        Console.WriteLine(nameof(OrdersHasFetched) + " OMS");
         orders = DataService.OrderLines;
         StateHasChanged();
     }

@@ -36,41 +36,38 @@ public class DataService
         InitializeDataAsync();
     }
 
-    private async Task InitializeDataAsync()
+    public  async Task InitializeDataAsync()
     {
         await _dataInitLock.WaitAsync();
         try
         {
-            if(!_isInitialized)
+        
+            Console.WriteLine("Initializing data...");
+            var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
+            if (ordersFromApi != null)
             {
-                Console.WriteLine("Initializing data...");
-                var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
-                if (ordersFromApi != null)
-                {
-                    OrderLines = ConvertResponseToOrderLine(ordersFromApi);
-                }
-                else
-                {
-                    Console.WriteLine("No orders found or error occurred while fetching orders.");
-                }
-                // Initilize all products
-                var productsResult = await _pimApiService.GetAllProductsAsync();
-                Console.WriteLine("Called GetAllProductsAsync");
-                if (productsResult != null)
-                {
-                    var nonNullProducts = productsResult
-                        .Where(p => p != null)
-                        .Cast<ProductDTO>()
-                        .ToList();
-                    Products = nonNullProducts;
-                }
-                else
-                {
-                    Products = new List<ProductDTO>();
-                } 
-                _isInitialized = true;
-
+                OrderLines = ConvertResponseToOrderLine(ordersFromApi);
             }
+            else
+            {
+                Console.WriteLine("No orders found or error occurred while fetching orders.");
+            }
+            // Initilize all products
+            var productsResult = await _pimApiService.GetAllProductsAsync();
+            Console.WriteLine("Called GetAllProductsAsync");
+            if (productsResult != null)
+            {
+                var nonNullProducts = productsResult
+                    .Where(p => p != null)
+                    .Cast<ProductDTO>()
+                    .ToList();
+                Products = nonNullProducts;
+            }
+            else
+            {
+                Products = new List<ProductDTO>();
+            } 
+        
         }
         finally
         {
