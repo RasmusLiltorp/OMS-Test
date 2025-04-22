@@ -89,7 +89,7 @@
     private OrderDTO? selectedOrder;
     private string selectedOrderId;
     private bool showConfirmation = false;
-
+    private string errorMessage = string.Empty;
     private string trackingNumberValue = string.Empty;
 
     private async Task<AutoCompleteDataProviderResult<OrderDTO>> SearchOrdersProvider(AutoCompleteDataProviderRequest<OrderDTO> request)
@@ -120,13 +120,20 @@
         var productIdStr = e.Value?.ToString();
         if (!string.IsNullOrEmpty(productIdStr))
         {
-            item.ProductUuid = productIdStr;
             var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
             if (product != null)
             {
+                item.ProductUuid = productIdStr;
                 item.Price = product.Price;
+                
+                if (item.Amount < 1)
+                {
+                    item.Amount = 1;
+                }
             }
         }
+        
+        StateHasChanged();
     }
 
     private void AddProduct()
@@ -145,15 +152,44 @@
         }
     }
 
-    private void HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
         if (selectedOrder is not null)
         {            
-            var index = DataService.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
-            if (index != -1)
+            decimal totalCost = 0;
+            foreach (var item in selectedOrder.LineElements)
             {
-                DataService.OrderLines[index] = selectedOrder;
-                showConfirmation = true;
+                totalCost += item.Price * item.Amount;
+            }
+            selectedOrder.TotalCost = totalCost;
+            
+            try
+            {
+                bool success = await DataService.UpdateOrderAsync(selectedOrder);
+                
+                if (success)
+                {
+                    var index = DataService.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
+                    if (index != -1)
+                    {
+                        DataService.OrderLines[index] = selectedOrder;
+                    }
+                    
+                    await DataService.InitializeDataAsync();
+                    
+                    showConfirmation = true;
+                    errorMessage = string.Empty;
+                }
+                else
+                {
+                    errorMessage = "Failed to update order on the server.";
+                    showConfirmation = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error: {ex.Message}";
+                showConfirmation = false;
             }
         }
     }

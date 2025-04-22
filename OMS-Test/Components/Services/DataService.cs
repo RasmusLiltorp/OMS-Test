@@ -103,6 +103,35 @@ public class DataService
         return result;
     }
 
+    public async Task<bool> UpdateOrderAsync(OrderDTO order)
+    {
+        try {
+            var patchData = new {
+                customerInfo = new {
+                    name = order.CustomerInfo.Name,
+                    customerId = order.CustomerInfo.CustomerId
+                },
+                shippingInfo = new {
+                    address1 = order.ShippingInfo.Address1,
+                    address2 = order.ShippingInfo.Address2,
+                    zipcodeId = order.ShippingInfo.ZipcodeId,
+                    countryId = order.ShippingInfo.CountryId
+                },
+                lineElements = order.LineElements,
+                totalCost = order.TotalCost,
+                date = order.Date
+            };
+            
+            var result = await _apiService.PatchOrderAsync(order.OrderId, patchData);
+            Console.WriteLine(result?.Status);
+            return result?.Status == "Success";
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"Update order error: {ex.Message}");
+            return false;
+        }
+    }
+
     public void SaveNewUniqueProduct(ProductDTO product)
     {
     }
