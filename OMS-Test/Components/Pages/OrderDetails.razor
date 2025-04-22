@@ -65,7 +65,7 @@
                         <tbody>
                             @foreach (var lineElement in order.LineElements)
                             {
-                                var product = DataService.Products?.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid.ToString());
+                                var product = DataService.Products?.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid);
                                 <tr>
                                     <td>@lineElement.ProductUuid</td>
                                     <td>@(product?.ProductName ?? "Unknown")</td>
