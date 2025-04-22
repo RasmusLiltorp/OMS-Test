@@ -50,9 +50,9 @@
         <h5>Products</h5>
         @foreach (var lineElement in selectedOrder.LineElements)
         {
-            <div class="mb-3 row">
+                <div class="mb-3 row">
                 <div class="col-4">
-                    <select class="form-select" value="@lineElement.ProductUuid.ToString()" @onchange="(e) => OnProductChanged(e, lineElement)">
+                    <select class="form-select" value="@lineElement.ProductUuid" @onchange="(e) => OnProductChanged(e, lineElement)">
                         <option disabled selected value="">Select product</option>
                         @foreach (var product in DataService.Products)
                         {
@@ -130,6 +130,8 @@
                 {
                     item.Amount = 1;
                 }
+                
+                Console.WriteLine($"Selected product: {productIdStr}, Price: {product.Price}");
             }
         }
         
@@ -140,7 +142,16 @@
     {
         if (selectedOrder?.LineElements is not null)
         {
-            selectedOrder.LineElements.Add(new LineElementDTO { ProductUuid = "1", Amount = 1, Price = 0.00M });
+            selectedOrder.LineElements.Add(new LineElementDTO 
+            { 
+                ProductUuid = "", 
+                Amount = 1,
+                Price = 0.00M 
+            });
+
+            StateHasChanged();
+            Console.WriteLine($"Added new product. Total products: {selectedOrder.LineElements.Count}");
+
         }
     }
 
@@ -152,16 +163,27 @@
         }
     }
 
-    private async Task HandleValidSubmit()
+        private async Task HandleValidSubmit()
     {
         if (selectedOrder is not null)
         {            
+            selectedOrder.LineElements.RemoveAll(item => string.IsNullOrEmpty(item.ProductUuid));
+            
             decimal totalCost = 0;
             foreach (var item in selectedOrder.LineElements)
             {
                 totalCost += item.Price * item.Amount;
             }
             selectedOrder.TotalCost = totalCost;
+            
+            if (!string.IsNullOrEmpty(trackingNumberValue))
+            {
+                if (selectedOrder.ShippingInfo == null)
+                {
+                    selectedOrder.ShippingInfo = new ShippingInfoDTO();
+                }
+                selectedOrder.ShippingInfo.TrackingNumber = trackingNumberValue;
+            }
             
             try
             {
@@ -176,6 +198,8 @@
                     }
                     
                     await DataService.InitializeDataAsync();
+                    
+                    selectedOrder = DataService.OrderLines.FirstOrDefault(o => o.OrderId == selectedOrder.OrderId);
                     
                     showConfirmation = true;
                     errorMessage = string.Empty;
@@ -193,7 +217,6 @@
             }
         }
     }
-
     private void CancelOrder()
     {
         NavigationManager.NavigateTo("/OMS/Manage");

@@ -75,7 +75,6 @@ public class DataService
             OrdersFetched.Invoke(this, EventArgs.Empty);
         }
     }
-
     private List<OrderDTO> ConvertResponseToOrderLine(RootDTO apiResponses)
     {
         var result = new List<OrderDTO>();
@@ -89,16 +88,23 @@ public class DataService
             var order = new OrderDTO
             {
                 OrderId = orderData.OrderId,
-                LineElements = orderData.LineElements,
+                LineElements = orderData.LineElements?.Select(le => new LineElementDTO
+                {
+                    ProductUuid = le.ProductUuid,
+                    Amount = le.Amount,
+                    Price = le.Price
+                }).ToList() ?? new List<LineElementDTO>(),
                 TotalCost = orderData.TotalCost,
                 Date = orderData.Date,
                 FulfillmentState = orderData.FulfillmentState,
                 CustomerInfo = orderData.CustomerInfo,
                 ShippingInfo = orderData.ShippingInfo
             };
-            Console.WriteLine($"Order added - ID: {order.OrderId}, Total Cost: {order.TotalCost}");
+            
+            Console.WriteLine($"Order added - ID: {order.OrderId}, Total Cost: {order.TotalCost}, Products: {order.LineElements.Count}");
             result.Add(order);
         }
+        
         Console.WriteLine($"Total orders added: {result.Count}. ");
         return result;
     }

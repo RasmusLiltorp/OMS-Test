@@ -51,19 +51,19 @@ class PIMApiService
         Console.WriteLine("Fetching all products...");
         return new List<ProductDTO?>(){
             new(){
-                ProductID = Guid.NewGuid().ToString(),
+                ProductID = "product-1",
                 ProductName = "test",
                 Price = 123,
                 Weight = (decimal)1.53,
             },
             new(){
-                ProductID = Guid.NewGuid().ToString(),
+                ProductID = "product-2",
                 ProductName = "tes2",
                 Price = 1234,
                 Weight = (decimal)1.234,
             },
             new(){
-                ProductID = Guid.NewGuid().ToString(),
+                ProductID = "product-3",
                 ProductName = "test3",
                 Price = 1235,
                 Weight = (decimal)1.235,
