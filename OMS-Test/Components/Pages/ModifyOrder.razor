@@ -113,6 +113,12 @@
         selectedOrder = selected;
         showConfirmation = false;
         trackingNumberValue = string.Empty; 
+
+        Console.WriteLine($"Selected order {selected.OrderId} with {selected.LineElements.Count} products:");
+        foreach (var item in selected.LineElements)
+        {
+            Console.WriteLine($"  Product: {item.ProductUuid}, Amount: {item.Amount}, Price: {item.Price}");
+        }
     }
 
     private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
@@ -163,11 +169,11 @@
         }
     }
 
-        private async Task HandleValidSubmit()
+    private async Task HandleValidSubmit()
     {
         if (selectedOrder is not null)
         {            
-            selectedOrder.LineElements.RemoveAll(item => string.IsNullOrEmpty(item.ProductUuid));
+            // selectedOrder.LineElements.RemoveAll(item => string.IsNullOrEmpty(item.ProductUuid));
             
             decimal totalCost = 0;
             foreach (var item in selectedOrder.LineElements)
@@ -217,6 +223,7 @@
             }
         }
     }
+    
     private void CancelOrder()
     {
         NavigationManager.NavigateTo("/OMS/Manage");

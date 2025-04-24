@@ -85,15 +85,14 @@ public class DataService
         
         foreach(var orderData in apiResponses.Data)
         {
+            Console.WriteLine($"Raw line elements: {System.Text.Json.JsonSerializer.Serialize(orderData.LineElements)}");
+            
             var order = new OrderDTO
             {
                 OrderId = orderData.OrderId,
-                LineElements = orderData.LineElements?.Select(le => new LineElementDTO
-                {
-                    ProductUuid = le.ProductUuid,
-                    Amount = le.Amount,
-                    Price = le.Price
-                }).ToList() ?? new List<LineElementDTO>(),
+                LineElements = orderData.LineElements != null ? 
+                    new List<LineElementDTO>(orderData.LineElements) : 
+                    new List<LineElementDTO>(),
                 TotalCost = orderData.TotalCost,
                 Date = orderData.Date,
                 FulfillmentState = orderData.FulfillmentState,
