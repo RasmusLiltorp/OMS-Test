@@ -94,7 +94,7 @@ namespace OMS_Services
             sb.AppendLine("</div></body></html>");
 
             var mail = new MailMessage();
-            string email = "thisisaplaceholder@oms.dk";
+            string email = "lucasbarlach@gmail.com";
             mail.From = new MailAddress("ArnesElektronik@gmail.com", "Arnes Elektronik");
             mail.To.Add(email);
             mail.Subject = $"Receipt for Order #{order.OrderId}";

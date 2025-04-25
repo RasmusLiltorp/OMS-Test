@@ -71,7 +71,7 @@
                                     <td>@(product?.ProductName ?? "Unknown")</td>
                                     <td>@lineElement.Amount</td>
                                     <td>@(lineElement?.Price.ToString("0.00") ?? "0.00") DKK</td>
-                                    <td>@((lineElement.Price * lineElement.Amount).ToString("0.00")) DKK</td>
+                                    <td>@((Convert.ToDecimal(lineElement?.Price) * Convert.ToDecimal(lineElement?.Amount)).ToString("0.00")) DKK</td>
                                 </tr>
                             }
                             <tr class="table">
@@ -95,7 +95,7 @@
     public string TrackingPlaceholder ="123456789";
 
     [Parameter]
-    public string OrderId { get; set; }
+    public string? OrderId { get; set; }
 
     private OrderDTO? order;
 

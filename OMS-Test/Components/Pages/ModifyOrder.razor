@@ -87,7 +87,7 @@
 
 @code {
     private OrderDTO? selectedOrder;
-    private string selectedOrderId;
+    private string? selectedOrderId;
     private bool showConfirmation = false;
     private string errorMessage = string.Empty;
     private string trackingNumberValue = string.Empty;
@@ -113,12 +113,6 @@
         selectedOrder = selected;
         showConfirmation = false;
         trackingNumberValue = string.Empty; 
-
-        Console.WriteLine($"Selected order {selected.OrderId} with {selected.LineElements.Count} products:");
-        foreach (var item in selected.LineElements)
-        {
-            Console.WriteLine($"  Product: {item.ProductUuid}, Amount: {item.Amount}, Price: {item.Price}");
-        }
     }
 
     private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
@@ -137,7 +131,6 @@
                     item.Amount = 1;
                 }
                 
-                Console.WriteLine($"Selected product: {productIdStr}, Price: {product.Price}");
             }
         }
         
@@ -156,8 +149,6 @@
             });
 
             StateHasChanged();
-            Console.WriteLine($"Added new product. Total products: {selectedOrder.LineElements.Count}");
-
         }
     }
 
@@ -171,56 +162,39 @@
 
     private async Task HandleValidSubmit()
     {
-        if (selectedOrder is not null)
-        {            
-            // selectedOrder.LineElements.RemoveAll(item => string.IsNullOrEmpty(item.ProductUuid));
-            
-            decimal totalCost = 0;
-            foreach (var item in selectedOrder.LineElements)
+        if (selectedOrder == null) 
+            return;
+
+        // Compute total
+        selectedOrder.TotalCost = selectedOrder.LineElements
+            .Sum(e => e.Price * e.Amount);
+
+        // Apply tracking if provided
+        if (!string.IsNullOrWhiteSpace(trackingNumberValue))
+            (selectedOrder.ShippingInfo ??= new ShippingInfoDTO())
+                .TrackingNumber = trackingNumberValue;
+
+        showConfirmation = false;
+        errorMessage = "";
+
+        try
+        {
+            // Update and reload
+            if (await DataService.UpdateOrderAsync(selectedOrder))
             {
-                totalCost += item.Price * item.Amount;
+                await DataService.InitializeDataAsync();
+                selectedOrder = DataService.OrderLines
+                    .FirstOrDefault(o => o.OrderId == selectedOrder.OrderId);
+                showConfirmation = true;
             }
-            selectedOrder.TotalCost = totalCost;
-            
-            if (!string.IsNullOrEmpty(trackingNumberValue))
+            else
             {
-                if (selectedOrder.ShippingInfo == null)
-                {
-                    selectedOrder.ShippingInfo = new ShippingInfoDTO();
-                }
-                selectedOrder.ShippingInfo.TrackingNumber = trackingNumberValue;
+                errorMessage = "Failed to update order on the server.";
             }
-            
-            try
-            {
-                bool success = await DataService.UpdateOrderAsync(selectedOrder);
-                
-                if (success)
-                {
-                    var index = DataService.OrderLines.FindIndex(o => o.OrderId == selectedOrder.OrderId);
-                    if (index != -1)
-                    {
-                        DataService.OrderLines[index] = selectedOrder;
-                    }
-                    
-                    await DataService.InitializeDataAsync();
-                    
-                    selectedOrder = DataService.OrderLines.FirstOrDefault(o => o.OrderId == selectedOrder.OrderId);
-                    
-                    showConfirmation = true;
-                    errorMessage = string.Empty;
-                }
-                else
-                {
-                    errorMessage = "Failed to update order on the server.";
-                    showConfirmation = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                errorMessage = $"Error: {ex.Message}";
-                showConfirmation = false;
-            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
         }
     }
     

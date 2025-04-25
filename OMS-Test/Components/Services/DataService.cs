@@ -16,12 +16,11 @@ public class DataService
 {
     private readonly ApiService _apiService;
     private readonly PIMApiService _pimApiService;
-    public List<ProductDTO> Products { get; private set; }
+    public List<ProductDTO> Products { get; private set; } = new();
     private readonly SemaphoreSlim _dataInitLock = new SemaphoreSlim(1, 1);
-    private bool _isInitialized = false;
 
     public List<OrderDTO> OrderLines { get; private set; } = new();
-    public event EventHandler OrdersFetched;
+    public event EventHandler OrdersFetched = delegate { };
 
     public DataService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
@@ -33,16 +32,15 @@ public class DataService
         _apiService = new ApiService(httpClient);
         _pimApiService = new PIMApiService();
         
-        InitializeDataAsync();
+        // Initialize data
+        _ = InitializeDataAsync();
     }
 
-    public  async Task InitializeDataAsync()
+    public async Task InitializeDataAsync()
     {
         await _dataInitLock.WaitAsync();
         try
-        {
-        
-            Console.WriteLine("Initializing data...");
+        {        
             var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
             if (ordersFromApi != null)
             {
@@ -54,7 +52,6 @@ public class DataService
             }
             // Initilize all products
             var productsResult = await _pimApiService.GetAllProductsAsync();
-            Console.WriteLine("Called GetAllProductsAsync");
             if (productsResult != null)
             {
                 var nonNullProducts = productsResult
@@ -84,9 +81,7 @@ public class DataService
         }
         
         foreach(var orderData in apiResponses.Data)
-        {
-            Console.WriteLine($"Raw line elements: {System.Text.Json.JsonSerializer.Serialize(orderData.LineElements)}");
-            
+        {            
             var order = new OrderDTO
             {
                 OrderId = orderData.OrderId,
@@ -100,11 +95,9 @@ public class DataService
                 ShippingInfo = orderData.ShippingInfo
             };
             
-            Console.WriteLine($"Order added - ID: {order.OrderId}, Total Cost: {order.TotalCost}, Products: {order.LineElements.Count}");
             result.Add(order);
         }
         
-        Console.WriteLine($"Total orders added: {result.Count}. ");
         return result;
     }
 
@@ -128,7 +121,6 @@ public class DataService
             };
             
             var result = await _apiService.PatchOrderAsync(order.OrderId, patchData);
-            Console.WriteLine(result?.Status);
             return result?.Status == "Success";
         }
         catch (Exception ex) {
