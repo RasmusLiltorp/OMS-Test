@@ -40,7 +40,7 @@
                                     <h5 class="font-size-16 mb-3">Billed To:</h5>
                                     <h5 class="font-size-15 mb-2">@order?.CustomerInfo.Name</h5>
                                     <p class="mb-1">@order?.ShippingInfo.Address1</p>
-                                    <p class="mb-1">@order.CustomerInfo.Email</P>                         
+                                    <p class="mb-1">@order?.CustomerInfo.Email</P>                         
                                     <p>+45 87 65 43 21</p>
                                 </div>
                             </div>
@@ -84,9 +84,9 @@
                                                     <tr>
                                                         <th scope="row">@index</th>
                                                         <td>@productDetails.ProductName</td>
-                                                        <td>@productDetails.Price.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK"))</td>
+                                                        <td>@lineElement.Price.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK"))</td>
                                                         <td>@lineElement.Amount</td>
-                                                        <td class="text-end">@((productDetails.Price * lineElement.Amount).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK")))</td>
+                                                        <td class="text-end">@((lineElement.Price * lineElement.Amount).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("da-DK")))</td>
                                                     </tr>
                                                     index++;
                                                 }
@@ -121,7 +121,7 @@
 @code {
 
     [Parameter]
-    public string OrderId { get; set; }
+    public string? OrderId { get; set; }
 
     private OrderDTO? order;
 

@@ -126,6 +126,7 @@
     private bool paymentLinkSent = false;
     private OrderDTO newOrder = new OrderDTO
     {
+        OrderId = Guid.NewGuid().ToString(),
         CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },
         ShippingInfo = new ShippingInfoDTO(),
         LineElements = new List<LineElementDTO>(),
@@ -170,8 +171,6 @@
             newOrder.ShippingInfo.Address2 = "";
         }
     
-        Console.WriteLine(JsonSerializer.Serialize<OrderDTO>(newOrder));
-
         var result = await ApiService.PostOrderLineToBackend(newOrder);
         
         showConfirmation = true;
@@ -186,6 +185,7 @@
     {
     newOrder = new OrderDTO
     {
+        OrderId      = Guid.NewGuid().ToString(),
         CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },
         ShippingInfo = new ShippingInfoDTO(),
         LineElements = new List<LineElementDTO>(),

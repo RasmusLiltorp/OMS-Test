@@ -4,10 +4,10 @@ namespace DTOs;
 public class OrderDTO
 {
     [JsonPropertyName("order-id")]
-    public string OrderId { get; set; }
+    public string OrderId { get; set; } = string.Empty;
 
     [JsonPropertyName("line-elements")]
-    public List<LineElementDTO> LineElements { get; set; }
+    public List<LineElementDTO> LineElements { get; set; } = new();
 
     [JsonPropertyName("total-cost")]
     public decimal TotalCost { get; set; }
@@ -19,8 +19,8 @@ public class OrderDTO
     public int FulfillmentState { get; set; }
 
     [JsonPropertyName("customer-info")]
-    public CustomerInfoDTO CustomerInfo { get; set; }
+    public CustomerInfoDTO CustomerInfo { get; set; } = new();
 
     [JsonPropertyName("shipping-info")]
-    public ShippingInfoDTO ShippingInfo { get; set; }
+    public ShippingInfoDTO ShippingInfo { get; set; } = new();
 }

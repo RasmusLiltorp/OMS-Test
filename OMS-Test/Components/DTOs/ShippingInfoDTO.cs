@@ -4,10 +4,10 @@ using DTOs;
 public class ShippingInfoDTO
 {
     [JsonPropertyName("address1")]
-    public string Address1 { get; set; }
+    public string Address1 { get; set; } = string.Empty;
 
     [JsonPropertyName("address2")]
-    public string Address2 { get; set; }
+    public string Address2 { get; set; } = string.Empty;
 
     [JsonPropertyName("zipcode-id")]
     public int ZipcodeId { get; set; }

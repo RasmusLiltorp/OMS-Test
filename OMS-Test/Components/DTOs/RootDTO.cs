@@ -4,8 +4,8 @@ namespace DTOs;
 public class RootDTO
 {
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("data")]
-    public List<OrderDTO> Data { get; set; }
+    public List<OrderDTO>? Data { get; set; } = new();
 }

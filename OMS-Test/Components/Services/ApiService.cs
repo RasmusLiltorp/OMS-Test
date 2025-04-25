@@ -31,20 +31,18 @@ public class ApiService
     public async Task<RootDTO?> GetMultipleOrdersAsync(int amount)
     {
         try
-        {
-            Console.WriteLine(nameof(GetMultipleOrdersAsync));
+        {            
             var response = await _http.GetFromJsonAsync<RootDTO>(
                 $"api/order/?amount={amount}",
                 _jsonOptions
             );
-            Console.WriteLine("Post Json Deserialize " + nameof(GetMultipleOrdersAsync));
             if (response == null || response.Data == null || response.Status != "Success")
             {
                 Console.WriteLine("Error: No orders found or error occurred while fetching orders.");
                 return new RootDTO
                 {
                     Status = "Exception",
-                    Data = null
+                    Data = new()
                 };
             }
             return response;
@@ -55,7 +53,7 @@ public class ApiService
             return new RootDTO
             {
                 Status = "Exception",
-                Data = null
+                Data = new()
             };
         }
     }
@@ -76,7 +74,6 @@ public class ApiService
             };
             
             var jsonContent = JsonSerializer.Serialize(patchData, options);
-            Console.WriteLine($"Sending PATCH payload: {jsonContent}");
             
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
             
@@ -85,7 +82,6 @@ public class ApiService
             response.EnsureSuccessStatusCode();
             
             var responseString = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Server response: {responseString}");
             
             using (JsonDocument doc = JsonDocument.Parse(responseString))
             {
@@ -109,10 +105,8 @@ public class ApiService
                     }
                     else if (dataElement.ValueKind == JsonValueKind.Array)
                     {
-                        result.Data = JsonSerializer.Deserialize<List<OrderDTO>>(
-                            dataElement.GetRawText(), 
-                            _jsonOptions
-                        );
+                        result.Data = JsonSerializer
+                        .Deserialize<List<OrderDTO>>(dataElement.GetRawText(), _jsonOptions)!;
                     }
                 }
                 
@@ -130,18 +124,16 @@ public class ApiService
     {
         try
         {
-            Console.WriteLine(nameof(GetOrderAsync));
             var response = await _http.GetFromJsonAsync<RootDTO>(
                 $"api/order/{orderID}",
                 _jsonOptions
             );
-            Console.WriteLine("Post Json Deserialize " + nameof(GetOrderAsync));
             if (response == null || response.Data == null || response.Status != "Success")
             {
                 return new RootDTO
                 {
                     Status = "Exception",
-                    Data = null
+                    Data = new()
                 };
             }
             return response;
@@ -151,7 +143,7 @@ public class ApiService
             return new RootDTO
             {
                 Status = "Exception",
-                Data = null
+                Data = new()
             };
         }
     }
@@ -172,13 +164,13 @@ public class ApiService
                 return new RootDTO
                 {
                     Status = "Exception",
-                    Data = null
+                    Data = new()
                 };
             }
             return new RootDTO
             {
                 Status = "Success",
-                Data = null
+                Data = new()
             };
         }
         catch
@@ -187,7 +179,7 @@ public class ApiService
             return new RootDTO
             {
                 Status = "Exception",
-                Data = null
+                Data = new()
             };
         }
     }
@@ -201,7 +193,6 @@ public class ApiService
         {
             var json = JsonSerializer.Serialize(orderDto, _jsonOptions);
             var response = await _http.PostAsJsonAsync("api/order/", orderDto, _jsonOptions);
-            Console.WriteLine($"Sending order: {json}");
 
             if (response == null)
             {
@@ -209,11 +200,9 @@ public class ApiService
                 return new RootDTO
                 {
                     Status = "Exception",
-                    Data = null
+                    Data = new()
                 };
             }
-            Console.WriteLine($"Response status: {response.StatusCode}, {await response.Content.ReadAsStringAsync()}");
-
             var result = await response.Content.ReadFromJsonAsync<RootDTO>(_jsonOptions);
             if (result == null)
             {
@@ -221,7 +210,7 @@ public class ApiService
                 return new RootDTO
                 {
                     Status = "Exception",
-                    Data = null
+                    Data = new()
                 };
             }
             return result;
@@ -232,7 +221,7 @@ public class ApiService
             return new RootDTO
             {
                 Status = "Exception",
-                Data = null
+                Data = new()
             };
         }
     }
