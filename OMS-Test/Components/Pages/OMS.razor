@@ -6,6 +6,9 @@
 @inject NavigationManager Navigation
 @inject IEmailService EmailService
 @using DTOs
+@inject ApiService ApiService
+@using System.Text.Json
+
 
 <PageTitle>Order Management System</PageTitle>
 
@@ -240,21 +243,45 @@
         deleteMessage = null;
     }
 
-    private void ConfirmDelete()
+    private async void ConfirmDelete()
+{
+    if (!string.IsNullOrEmpty(selectedDeleteOrderId))
     {
-        if (selectedDeleteOrderId != null)
-        {
-            var orderToDelete = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == selectedDeleteOrderId);
-            if (orderToDelete != null)
-            {
-                DataService.OrderLines?.Remove(orderToDelete);
-                deleteMessage = $"Order #{orderToDelete.OrderId} deleted successfully.";
-                selectedDeleteOrderId = null;
+        var result = await ApiService.DeleteOrderAsync(selectedDeleteOrderId);
 
-                orders?.Remove(orderToDelete);
-            }
+        if (result != null && result.Status == "Success")
+        {
+            deleteMessage = $"Order #{selectedDeleteOrderId} deleted successfully.";
+
+            // Refresh orders
+            await DataService.InitializeDataAsync();
+            orders = DataService.OrderLines;
+
+            selectedDeleteOrderId = null;
+            showDeleteModal = false;
+            StateHasChanged();
+        }
+        else
+        {
+            deleteMessage = $"Failed to delete Order #{selectedDeleteOrderId}.";
         }
     }
+}
+
+
+public async Task<bool> DeleteOrderByIdAsync(string orderId)
+{
+    if (string.IsNullOrEmpty(orderId))
+    {
+        return false;
+    }
+
+    var result = await ApiService.DeleteOrderAsync(orderId);
+    return result != null && result.Status == "Success";
+}
+
+
+
 
     private void CreateOrder()
     {
