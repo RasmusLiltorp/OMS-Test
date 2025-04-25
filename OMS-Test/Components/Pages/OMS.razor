@@ -279,19 +279,16 @@ public async Task<bool> DeleteOrderByIdAsync(string orderId)
     var result = await ApiService.DeleteOrderAsync(orderId);
     return result != null && result.Status == "Success";
 }
+      
+private void CreateOrder()
+{
+  Navigation.NavigateTo("/OMS/CreateOrder");
+}
 
-
-
-
-    private void CreateOrder()
-    {
-        Navigation.NavigateTo("/OMS/CreateOrder");
-    }
-
-    private void ModifyOrder()
-    {
-        Navigation.NavigateTo("/OMS/ModifyOrder");
-    }
+private void ModifyOrder()
+{
+    Navigation.NavigateTo("/OMS/ModifyOrder");
+}
 
     private async Task SendReceipt(string orderId)
     {
@@ -305,7 +302,6 @@ public async Task<bool> DeleteOrderByIdAsync(string orderId)
             sendMessage = null;
             StateHasChanged();
         }
-    }
 
     private void ViewReceipt(string orderId)
     {

@@ -22,6 +22,7 @@
             {
                 <div class="card p-3" style="min-height: 200px;">
                     <p><strong>Order:</strong> @order.OrderId</p>
+
                     <p><strong>Customer:</strong> @order.CustomerInfo.Name</p>
                     <p><strong>Date:</strong> @order.Date.ToString("dd MMM yyyy")</p>
                     <p><strong>Total Amount:</strong> @DataService.CalculateOrdertotal(order).ToString("0.00") DKK</p>

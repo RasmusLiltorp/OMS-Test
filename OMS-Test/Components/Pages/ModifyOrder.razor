@@ -43,6 +43,11 @@
         </div>
 
         <div class="mb-3">
+            <label class="form-label">Email</label>
+            <InputText class="form-control" @bind-Value="selectedOrder.Email" />
+        </div>
+
+        <div class="mb-3">
             <label class="form-label">Track & Trace</label>
             <input type="text" class="form-control" @bind="trackingNumberValue" placeholder="e.g. T123456789DK" />
         </div>
