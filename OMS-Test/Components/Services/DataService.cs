@@ -148,4 +148,30 @@ public class DataService
     {
         return 0;
     }
+
+    public async Task<List<BrandAnalyticsDTO>> GetBrandAnalyticsAsync(DateOnly from, DateOnly to)
+    {
+        var brands = await _apiService.GetBrandAnalyticsAsync(from, to);
+        return brands ?? new List<BrandAnalyticsDTO>();
+    }
+
+    public async Task<List<CategoryAnalyticsDTO>> GetCategoryAnalyticsAsync(DateOnly from, DateOnly to)
+    {
+        var categories = await _apiService.GetCategoryAnalyticsAsync(from, to);
+        return categories ?? new List<CategoryAnalyticsDTO>();
+    }
+
+    public async Task<List<string>> GetAllBrandsAsync()
+{
+    var brandAnalytics = await _apiService.GetBrandAnalyticsAsync(DateOnly.MinValue, DateOnly.MaxValue);
+    return brandAnalytics?.Select(b => b.BrandName).Distinct().ToList() ?? new List<string>();
+}
+
+public async Task<List<string>> GetAllCategoriesAsync()
+{
+    var categoryAnalytics = await _apiService.GetCategoryAnalyticsAsync(DateOnly.MinValue, DateOnly.MaxValue);
+    return categoryAnalytics?.Select(c => c.CategoryName).Distinct().ToList() ?? new List<string>();
+}
+
+
 }

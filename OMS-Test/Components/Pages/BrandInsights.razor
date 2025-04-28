@@ -1,0 +1,222 @@
+@page "/OMS/BrandInsights"
+@using BlazorBootstrap
+@using OMS_Services
+@using DTOs
+@inject DataService DataService
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+@inject IEmailService EmailService
+@rendermode InteractiveServer
+
+<PageTitle>Brand Insights</PageTitle>
+
+<div class="topnav">
+    <a href="./OMS/Manage">OMS</a>
+    <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+</div>
+
+<h2>Brand Insights</h2>
+
+<h4>Select Periods to Compare</h4>
+
+<div class="d-flex flex-wrap align-items-end gap-4 mb-4">
+    <div class="d-flex align-items-center gap-2">
+        <strong>Period 1</strong>
+        <label>From:</label>
+        <InputDate @bind-Value="fromDate1" class="form-control" style="width: 150px;" />
+        <label>To:</label>
+        <InputDate @bind-Value="toDate1" class="form-control" style="width: 150px;" />
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <strong>Period 2</strong>
+        <label>From:</label>
+        <InputDate @bind-Value="fromDate2" class="form-control" style="width: 150px;" />
+        <label>To:</label>
+        <InputDate @bind-Value="toDate2" class="form-control" style="width: 150px;" />
+    </div>
+</div>
+
+<h5>Filters</h5>
+<div class="mb-3 d-flex align-items-end gap-3">
+    <div>
+        <label>Brand (only for Brand Comparison):</label>
+        <select class="form-select" @bind="selectedBrand">
+            <option value="">-- All Brands --</option>
+            @foreach (var brand in allBrands)
+            {
+                <option value="@brand">@brand</option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <label>Category (only for Category Comparison):</label>
+        <select class="form-select" @bind="selectedCategory">
+            <option value="">-- All Categories --</option>
+            @foreach (var category in allCategories)
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-primary" @onclick="CompareAnalytics">Apply & Compare</button>
+</div>
+
+<h3>Brand Analytics Comparison</h3>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Units Sold (P1)</th>
+            <th>Revenue (P1)</th>
+            <th>Units Sold (P2)</th>
+            <th>Revenue (P2)</th>
+            <th>Units Diff.</th>
+            <th>Revenue Diff.</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var brand in brandComparison)
+        {
+            <tr>
+                <td>@brand.BrandName</td>
+                <td>@brand.Period1UnitsSold</td>
+                <td>@brand.Period1Revenue.ToString("C")</td>
+                <td>@brand.Period2UnitsSold</td>
+                <td>@brand.Period2Revenue.ToString("C")</td>
+                <td>@(brand.Period2UnitsSold - brand.Period1UnitsSold)</td>
+                <td>@((brand.Period2Revenue - brand.Period1Revenue).ToString("C"))</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Category Analytics Comparison</h3>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Units Sold (P1)</th>
+            <th>Revenue (P1)</th>
+            <th>Units Sold (P2)</th>
+            <th>Revenue (P2)</th>
+            <th>Units Diff.</th>
+            <th>Revenue Diff.</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var category in categoryComparison)
+        {
+            <tr>
+                <td>@category.CategoryName</td>
+                <td>@category.Period1UnitsSold</td>
+                <td>@category.Period1Revenue.ToString("C")</td>
+                <td>@category.Period2UnitsSold</td>
+                <td>@category.Period2Revenue.ToString("C")</td>
+                <td>@(category.Period2UnitsSold - category.Period1UnitsSold)</td>
+                <td>@((category.Period2Revenue - category.Period1Revenue).ToString("C"))</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private DateOnly fromDate1 = new(2025, 3, 1);
+    private DateOnly toDate1 = new(2025, 3, 15);
+    private DateOnly fromDate2 = new(2025, 3, 16);
+    private DateOnly toDate2 = new(2025, 3, 31);
+
+    private string selectedBrand = "";
+    private string selectedCategory = "";
+
+    private List<string> allBrands = new();
+    private List<string> allCategories = new();
+
+    private List<BrandComparisonDTO> brandComparison = new();
+    private List<CategoryComparisonDTO> categoryComparison = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        allBrands = await DataService.GetAllBrandsAsync();
+        allCategories = await DataService.GetAllCategoriesAsync();
+        await CompareAnalytics();
+    }
+
+    private async Task CompareAnalytics()
+    {
+        await CompareBrandAnalytics();
+        await CompareCategoryAnalytics();
+    }
+
+    private async Task CompareBrandAnalytics()
+    {
+        var rawPeriod1 = await DataService.GetBrandAnalyticsAsync(fromDate1, toDate1);
+        var rawPeriod2 = await DataService.GetBrandAnalyticsAsync(fromDate2, toDate2);
+
+        var filtered1 = string.IsNullOrEmpty(selectedBrand)
+            ? rawPeriod1
+            : rawPeriod1.Where(b => b.BrandName == selectedBrand).ToList();
+
+        var filtered2 = string.IsNullOrEmpty(selectedBrand)
+            ? rawPeriod2
+            : rawPeriod2.Where(b => b.BrandName == selectedBrand).ToList();
+
+        brandComparison = filtered1.Select(a => a.BrandName)
+            .Union(filtered2.Select(a => a.BrandName))
+            .Distinct()
+            .Select(brand => new BrandComparisonDTO
+            {
+                BrandName = brand,
+                Period1UnitsSold = filtered1.FirstOrDefault(b => b.BrandName == brand)?.TotalUnitsSold ?? 0,
+                Period1Revenue = filtered1.FirstOrDefault(b => b.BrandName == brand)?.TotalRevenue ?? 0,
+                Period2UnitsSold = filtered2.FirstOrDefault(b => b.BrandName == brand)?.TotalUnitsSold ?? 0,
+                Period2Revenue = filtered2.FirstOrDefault(b => b.BrandName == brand)?.TotalRevenue ?? 0,
+            }).ToList();
+    }
+
+    private async Task CompareCategoryAnalytics()
+    {
+        var rawPeriod1 = await DataService.GetCategoryAnalyticsAsync(fromDate1, toDate1);
+        var rawPeriod2 = await DataService.GetCategoryAnalyticsAsync(fromDate2, toDate2);
+
+        var filtered1 = string.IsNullOrEmpty(selectedCategory)
+            ? rawPeriod1
+            : rawPeriod1.Where(c => c.CategoryName == selectedCategory).ToList();
+
+        var filtered2 = string.IsNullOrEmpty(selectedCategory)
+            ? rawPeriod2
+            : rawPeriod2.Where(c => c.CategoryName == selectedCategory).ToList();
+
+        categoryComparison = filtered1.Select(a => a.CategoryName)
+            .Union(filtered2.Select(a => a.CategoryName))
+            .Distinct()
+            .Select(category => new CategoryComparisonDTO
+            {
+                CategoryName = category,
+                Period1UnitsSold = filtered1.FirstOrDefault(c => c.CategoryName == category)?.TotalUnitsSold ?? 0,
+                Period1Revenue = filtered1.FirstOrDefault(c => c.CategoryName == category)?.TotalRevenue ?? 0,
+                Period2UnitsSold = filtered2.FirstOrDefault(c => c.CategoryName == category)?.TotalUnitsSold ?? 0,
+                Period2Revenue = filtered2.FirstOrDefault(c => c.CategoryName == category)?.TotalRevenue ?? 0,
+            }).ToList();
+    }
+
+    public class BrandComparisonDTO
+    {
+        public string BrandName { get; set; } = "";
+        public int Period1UnitsSold { get; set; }
+        public decimal Period1Revenue { get; set; }
+        public int Period2UnitsSold { get; set; }
+        public decimal Period2Revenue { get; set; }
+    }
+
+    public class CategoryComparisonDTO
+    {
+        public string CategoryName { get; set; } = "";
+        public int Period1UnitsSold { get; set; }
+        public decimal Period1Revenue { get; set; }
+        public int Period2UnitsSold { get; set; }
+        public decimal Period2Revenue { get; set; }
+    }
+}

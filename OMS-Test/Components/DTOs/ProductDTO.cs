@@ -9,6 +9,9 @@ public class ProductDTO
     public required string ProductName { get; set; }
     [JsonPropertyName("price")]
     public decimal Price { get; set; }
+
+    public required string BrandName { get; set; }
+    public required string ProductCategory  { get; set; }
     
     //Placeholder
     public decimal Weight { get; set; }
