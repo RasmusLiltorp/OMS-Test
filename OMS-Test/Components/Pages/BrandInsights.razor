@@ -3,7 +3,6 @@
 @using OMS_Services
 @using DTOs
 @inject DataService DataService
-@inject AnalyticsService AnalyticsService
 @inject NavigationManager NavigationManager
 @inject IEmailService EmailService
 @rendermode InteractiveServer
@@ -127,8 +126,8 @@
     private DateOnly toDate1 = new(2025, 3, 15);
     private DateOnly fromDate2 = new(2025, 3, 16);
     private DateOnly toDate2 = new(2025, 3, 31);
-    private string selectedBrand = "";
-    private string selectedCategory = "";
+    private string selectedBrand { get; set; } = "";
+    private string selectedCategory { get; set; } = "";
 
     private List<string> allBrands = new();
     private List<string> allCategories = new();
@@ -137,51 +136,43 @@
 
     protected override async Task OnInitializedAsync()
     {
-        allBrands = DataService.GetAllBrands();
-        allCategories = DataService.GetAllCategories();
+        DataService.OrdersFetched += OrdersHasFetched;
+        StateHasChanged();
     }
 
-    protected void CompareTwoTimePeriodsBrand(string brandName, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
+    protected void CompareTwoTimePeriodsBrand(string brand, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
     {
-        var brandAnalyticsFirstPeriod = AnalyticsService.CompareBrandsInterval(brandName, fromDate1, toDate1);
-        var brandAnalyticsSecondPeriod = AnalyticsService.CompareBrandsInterval(brandName, fromDate2, toDate2);
+        var brandAnalyticsFirstPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate1, toDate1);
+        var brandAnalyticsSecondPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate2, toDate2);
         
-        if (brandAnalyticsFirstPeriod.TryGetValue(brandName, out var firstPeriodData) && 
-            brandAnalyticsSecondPeriod.TryGetValue(brandName, out var secondPeriodData))
+        Console.WriteLine($"Brand: {brand}");
+        if (brandAnalyticsFirstPeriod.TryGetValue(brand, out var firstPeriodData) && 
+            brandAnalyticsSecondPeriod.TryGetValue(brand, out var secondPeriodData))
         {
             var brandAnalytics = new BrandAnalyticsComparerDTO
             {
-                BrandName = brandName,
+                BrandName = brand,
                 Period1UnitsSold = firstPeriodData.PeriodUnitsSold,
                 Period1Revenue = firstPeriodData.PeriodRevenue,
                 Period2UnitsSold = secondPeriodData.PeriodUnitsSold,
                 Period2Revenue = secondPeriodData.PeriodRevenue
             };
             
+            Console.WriteLine(brandAnalytics);
             brandComparison.Add(brandAnalytics);
         }
     }
     
     protected void CompareAnalytics()
     {
-        brandComparison.Clear();
-        categoryComparison.Clear();
-        
-        if (string.IsNullOrEmpty(selectedBrand))
-        {
-            foreach (var brand in allBrands)
-            {
-                CompareTwoTimePeriodsBrand(brand, fromDate1, toDate1, fromDate2, toDate2);
-            }
-        }
-        else
-        {
-            CompareTwoTimePeriodsBrand(selectedBrand, fromDate1, toDate1, fromDate2, toDate2);
-        }
-        
-        // TODO: Add similar logic for category comparison
-        
+        Console.WriteLine("Comparing "+selectedBrand);
+        CompareTwoTimePeriodsBrand(selectedBrand, fromDate1, toDate1, fromDate2, toDate2);        
         StateHasChanged();
     }
 
+    public void OrdersHasFetched(object? sender, EventArgs e){
+        allBrands = DataService.GetAllBrands();
+        allCategories = DataService.GetAllCategories();
+        StateHasChanged();
+    }
 }

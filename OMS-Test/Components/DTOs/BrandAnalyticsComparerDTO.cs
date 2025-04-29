@@ -1,3 +1,5 @@
+    namespace DTOs;
+    
     public class BrandAnalyticsComparerDTO
     {
         public string BrandName { get; set; } = "";

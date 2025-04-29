@@ -39,6 +39,10 @@ public class DataService
         _ = InitializeDataAsync();
     }
 
+    // expose analytics service
+    public AnalyticsService Analytics => _analyticsService;
+
+
     public async Task InitializeDataAsync()
     {
         await _dataInitLock.WaitAsync();
@@ -160,6 +164,7 @@ public class DataService
             if (product.BrandName != null)
             {
                 Brands.Add(product.BrandName);   
+                Console.WriteLine("Added brand "+product.BrandName);
             }
         }
         return Brands;

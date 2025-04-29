@@ -1,6 +1,5 @@
-namespace DTOs;  
-
-public class CategoryComparisonDTO
+namespace DTOs;
+public class CategoryAnalyticsComparerDTO
 {
     public string CategoryName { get; set; } = "";
     public int Period1UnitsSold { get; set; }

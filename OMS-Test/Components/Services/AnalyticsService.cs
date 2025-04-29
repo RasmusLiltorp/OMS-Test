@@ -87,16 +87,15 @@ public class AnalyticsService
                     brandData = new BrandComparisonDTO
                     {
                         BrandName = currentBrand,
-                        Period1UnitsSold = 0,
-                        Period1Revenue = 0,
-                        Period2UnitsSold = 0,
-                        Period2Revenue = 0
+                        PeriodUnitsSold = 0,
+                        PeriodRevenue = 0,
+    
                     };
                     brandResults[currentBrand] = brandData;
                 }
                 
-                brandData.Period1UnitsSold += lineItem.Amount;
-                brandData.Period1Revenue += lineItem.Price * lineItem.Amount;
+                brandData.PeriodUnitsSold += lineItem.Amount;
+                brandData.PeriodRevenue += lineItem.Price * lineItem.Amount;
             }
         }
         
