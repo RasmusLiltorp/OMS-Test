@@ -209,40 +209,6 @@ public class ApiService
             };
         }
     }
-
-    public async Task<List<BrandAnalyticsDTO>?> GetBrandAnalyticsAsync(DateOnly from, DateOnly to)
-    {
-        try
-        {
-            var response = await _http.GetFromJsonAsync<List<BrandAnalyticsDTO>>(
-                $"api/analytics/brands?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}",
-                _jsonOptions
-            );
-            return response;
-        }
-        catch
-        {
-            Console.WriteLine("Error fetching brand analytics.");
-            return null;
-        }
-    }
-
-    public async Task<List<CategoryAnalyticsDTO>?> GetCategoryAnalyticsAsync(DateOnly from, DateOnly to)
-    {
-        try
-        {
-            var response = await _http.GetFromJsonAsync<List<CategoryAnalyticsDTO>>(
-                $"api/analytics/categories?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}",
-                _jsonOptions
-            );
-            return response;
-        }
-        catch
-        {
-            Console.WriteLine("Error fetching category analytics.");
-            return null;
-        }
-    }
 }
 
 /// <summary>

@@ -16,10 +16,12 @@ public class DataService
 {
     private readonly ApiService _apiService;
     private readonly PIMApiService _pimApiService;
+    private readonly AnalyticsService _analyticsService;
     public List<ProductDTO> Products { get; private set; } = new();
     private readonly SemaphoreSlim _dataInitLock = new SemaphoreSlim(1, 1);
 
     public List<OrderDTO> OrderLines { get; private set; } = new();
+
     public event EventHandler OrdersFetched = delegate { };
 
     public DataService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
@@ -31,6 +33,7 @@ public class DataService
 
         _apiService = new ApiService(httpClient);
         _pimApiService = new PIMApiService();
+        _analyticsService = new AnalyticsService(this);
         
         // Initialize data
         _ = InitializeDataAsync();
@@ -149,29 +152,33 @@ public class DataService
         return 0;
     }
 
-    public async Task<List<BrandAnalyticsDTO>> GetBrandAnalyticsAsync(DateOnly from, DateOnly to)
+    public List<string> GetAllBrands()
     {
-        var brands = await _apiService.GetBrandAnalyticsAsync(from, to);
-        return brands ?? new List<BrandAnalyticsDTO>();
+        List<string> Brands = new();
+        foreach (var product in Products)
+        {
+            if (product.BrandName != null)
+            {
+                Brands.Add(product.BrandName);   
+            }
+        }
+        return Brands;
     }
-
-    public async Task<List<CategoryAnalyticsDTO>> GetCategoryAnalyticsAsync(DateOnly from, DateOnly to)
+    public List<string> GetAllCategories()
     {
-        var categories = await _apiService.GetCategoryAnalyticsAsync(from, to);
-        return categories ?? new List<CategoryAnalyticsDTO>();
+        List<string> Categories = new();
+        foreach (var product in Products)
+        {
+            if (product.ProductCategory != null)
+            {
+                Categories.Add(product.ProductCategory);   
+            }
+        }
+        return Categories;
     }
-
-    public async Task<List<string>> GetAllBrandsAsync()
-{
-    var brandAnalytics = await _apiService.GetBrandAnalyticsAsync(DateOnly.MinValue, DateOnly.MaxValue);
-    return brandAnalytics?.Select(b => b.BrandName).Distinct().ToList() ?? new List<string>();
-}
-
-public async Task<List<string>> GetAllCategoriesAsync()
-{
-    var categoryAnalytics = await _apiService.GetCategoryAnalyticsAsync(DateOnly.MinValue, DateOnly.MaxValue);
-    return categoryAnalytics?.Select(c => c.CategoryName).Distinct().ToList() ?? new List<string>();
-}
-
-
+    
+    public AnalyticsService GetAnalyticsService()
+    {
+        return _analyticsService;
+    }
 }

@@ -3,7 +3,7 @@
 @using OMS_Services
 @using DTOs
 @inject DataService DataService
-@inject ApiService ApiService
+@inject AnalyticsService AnalyticsService
 @inject NavigationManager NavigationManager
 @inject IEmailService EmailService
 @rendermode InteractiveServer
@@ -127,96 +127,61 @@
     private DateOnly toDate1 = new(2025, 3, 15);
     private DateOnly fromDate2 = new(2025, 3, 16);
     private DateOnly toDate2 = new(2025, 3, 31);
-
     private string selectedBrand = "";
     private string selectedCategory = "";
 
     private List<string> allBrands = new();
     private List<string> allCategories = new();
-
-    private List<BrandComparisonDTO> brandComparison = new();
+    private List<BrandAnalyticsComparerDTO> brandComparison = new();
     private List<CategoryComparisonDTO> categoryComparison = new();
 
     protected override async Task OnInitializedAsync()
     {
-        allBrands = await DataService.GetAllBrandsAsync();
-        allCategories = await DataService.GetAllCategoriesAsync();
-        await CompareAnalytics();
+        allBrands = DataService.GetAllBrands();
+        allCategories = DataService.GetAllCategories();
     }
 
-    private async Task CompareAnalytics()
+    protected void CompareTwoTimePeriodsBrand(string brandName, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
     {
-        await CompareBrandAnalytics();
-        await CompareCategoryAnalytics();
-    }
-
-    private async Task CompareBrandAnalytics()
-    {
-        var rawPeriod1 = await DataService.GetBrandAnalyticsAsync(fromDate1, toDate1);
-        var rawPeriod2 = await DataService.GetBrandAnalyticsAsync(fromDate2, toDate2);
-
-        var filtered1 = string.IsNullOrEmpty(selectedBrand)
-            ? rawPeriod1
-            : rawPeriod1.Where(b => b.BrandName == selectedBrand).ToList();
-
-        var filtered2 = string.IsNullOrEmpty(selectedBrand)
-            ? rawPeriod2
-            : rawPeriod2.Where(b => b.BrandName == selectedBrand).ToList();
-
-        brandComparison = filtered1.Select(a => a.BrandName)
-            .Union(filtered2.Select(a => a.BrandName))
-            .Distinct()
-            .Select(brand => new BrandComparisonDTO
+        var brandAnalyticsFirstPeriod = AnalyticsService.CompareBrandsInterval(brandName, fromDate1, toDate1);
+        var brandAnalyticsSecondPeriod = AnalyticsService.CompareBrandsInterval(brandName, fromDate2, toDate2);
+        
+        if (brandAnalyticsFirstPeriod.TryGetValue(brandName, out var firstPeriodData) && 
+            brandAnalyticsSecondPeriod.TryGetValue(brandName, out var secondPeriodData))
+        {
+            var brandAnalytics = new BrandAnalyticsComparerDTO
             {
-                BrandName = brand,
-                Period1UnitsSold = filtered1.FirstOrDefault(b => b.BrandName == brand)?.TotalUnitsSold ?? 0,
-                Period1Revenue = filtered1.FirstOrDefault(b => b.BrandName == brand)?.TotalRevenue ?? 0,
-                Period2UnitsSold = filtered2.FirstOrDefault(b => b.BrandName == brand)?.TotalUnitsSold ?? 0,
-                Period2Revenue = filtered2.FirstOrDefault(b => b.BrandName == brand)?.TotalRevenue ?? 0,
-            }).ToList();
+                BrandName = brandName,
+                Period1UnitsSold = firstPeriodData.PeriodUnitsSold,
+                Period1Revenue = firstPeriodData.PeriodRevenue,
+                Period2UnitsSold = secondPeriodData.PeriodUnitsSold,
+                Period2Revenue = secondPeriodData.PeriodRevenue
+            };
+            
+            brandComparison.Add(brandAnalytics);
+        }
     }
-
-    private async Task CompareCategoryAnalytics()
+    
+    protected void CompareAnalytics()
     {
-        var rawPeriod1 = await DataService.GetCategoryAnalyticsAsync(fromDate1, toDate1);
-        var rawPeriod2 = await DataService.GetCategoryAnalyticsAsync(fromDate2, toDate2);
-
-        var filtered1 = string.IsNullOrEmpty(selectedCategory)
-            ? rawPeriod1
-            : rawPeriod1.Where(c => c.CategoryName == selectedCategory).ToList();
-
-        var filtered2 = string.IsNullOrEmpty(selectedCategory)
-            ? rawPeriod2
-            : rawPeriod2.Where(c => c.CategoryName == selectedCategory).ToList();
-
-        categoryComparison = filtered1.Select(a => a.CategoryName)
-            .Union(filtered2.Select(a => a.CategoryName))
-            .Distinct()
-            .Select(category => new CategoryComparisonDTO
+        brandComparison.Clear();
+        categoryComparison.Clear();
+        
+        if (string.IsNullOrEmpty(selectedBrand))
+        {
+            foreach (var brand in allBrands)
             {
-                CategoryName = category,
-                Period1UnitsSold = filtered1.FirstOrDefault(c => c.CategoryName == category)?.TotalUnitsSold ?? 0,
-                Period1Revenue = filtered1.FirstOrDefault(c => c.CategoryName == category)?.TotalRevenue ?? 0,
-                Period2UnitsSold = filtered2.FirstOrDefault(c => c.CategoryName == category)?.TotalUnitsSold ?? 0,
-                Period2Revenue = filtered2.FirstOrDefault(c => c.CategoryName == category)?.TotalRevenue ?? 0,
-            }).ToList();
+                CompareTwoTimePeriodsBrand(brand, fromDate1, toDate1, fromDate2, toDate2);
+            }
+        }
+        else
+        {
+            CompareTwoTimePeriodsBrand(selectedBrand, fromDate1, toDate1, fromDate2, toDate2);
+        }
+        
+        // TODO: Add similar logic for category comparison
+        
+        StateHasChanged();
     }
 
-    public class BrandComparisonDTO
-    {
-        public string BrandName { get; set; } = "";
-        public int Period1UnitsSold { get; set; }
-        public decimal Period1Revenue { get; set; }
-        public int Period2UnitsSold { get; set; }
-        public decimal Period2Revenue { get; set; }
-    }
-
-    public class CategoryComparisonDTO
-    {
-        public string CategoryName { get; set; } = "";
-        public int Period1UnitsSold { get; set; }
-        public decimal Period1Revenue { get; set; }
-        public int Period2UnitsSold { get; set; }
-        public decimal Period2Revenue { get; set; }
-    }
 }

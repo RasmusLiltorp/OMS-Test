@@ -10,8 +10,8 @@ public class ProductDTO
     [JsonPropertyName("price")]
     public decimal Price { get; set; }
 
-    public required string BrandName { get; set; }
-    public required string ProductCategory  { get; set; }
+    public string? BrandName { get; set; }
+    public string? ProductCategory  { get; set; }
     
     //Placeholder
     public decimal Weight { get; set; }
