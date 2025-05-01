@@ -17,7 +17,18 @@
 </div>
 
 <div class="container mt-4">
-    <h3>Brand Analytics</h3>
+    <h3>Analytics</h3>
+
+    <div class="text-center mb-3">
+        <div class="btn-group" role="group" aria-label="Analytics View Toggle">
+            <button type="button" class="btn @(activeView == "brands" ? "btn-primary" : "btn-outline-primary")">
+                <i class="bi bi-tag me-1"></i> Brands
+            </button>
+            <button type="button" class="btn @(activeView == "products" ? "btn-primary" : "btn-outline-primary")">
+                <i class="bi bi-box me-1"></i> Product statistics
+            </button>
+        </div>
+    </div>
 
     <div class="card mb-3">
         <div class="card-header bg-light">
@@ -213,6 +224,7 @@
     private DateOnly toDate2 = new(2025, 4, 30);
     private string selectedBrand { get; set; } = "";
     private string selectedCategory { get; set; } = "";
+    private string activeView { get; set; } = "brands";
 
     private List<string> allBrands = new();
     private List<string> allCategories = new();
