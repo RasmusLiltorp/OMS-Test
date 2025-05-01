@@ -122,10 +122,10 @@
 </table>
 
 @code {
-    private DateOnly fromDate1 = new(2025, 3, 1);
-    private DateOnly toDate1 = new(2025, 3, 15);
-    private DateOnly fromDate2 = new(2025, 3, 16);
-    private DateOnly toDate2 = new(2025, 3, 31);
+    private DateOnly fromDate1 = new(2025, 4, 1);
+    private DateOnly toDate1 = new(2025, 4, 15);
+    private DateOnly fromDate2 = new(2025, 4, 16);
+    private DateOnly toDate2 = new(2025, 4, 30);
     private string selectedBrand { get; set; } = "";
     private string selectedCategory { get; set; } = "";
 
@@ -142,31 +142,133 @@
 
     protected void CompareTwoTimePeriodsBrand(string brand, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
     {
+        brandComparison.Clear();
+        
+        BrandComparisonDTO? firstPeriodData = null;
+        BrandComparisonDTO? secondPeriodData = null;
+        
         var brandAnalyticsFirstPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate1, toDate1);
         var brandAnalyticsSecondPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate2, toDate2);
         
-        Console.WriteLine($"Brand: {brand}");
-        if (brandAnalyticsFirstPeriod.TryGetValue(brand, out var firstPeriodData) && 
-            brandAnalyticsSecondPeriod.TryGetValue(brand, out var secondPeriodData))
+        
+        if (string.IsNullOrEmpty(brand))
+        {
+            var allBrandNames = brandAnalyticsFirstPeriod.Keys
+                .Union(brandAnalyticsSecondPeriod.Keys)
+                .Distinct()
+                .ToList();
+                
+            foreach (var brandName in allBrandNames)
+            {
+                var analyticsData = new BrandAnalyticsComparerDTO
+                {
+                    BrandName = brandName,
+                    Period1UnitsSold = 0,
+                    Period1Revenue = 0,
+                    Period2UnitsSold = 0,
+                    Period2Revenue = 0
+                };
+                
+                if (brandAnalyticsFirstPeriod.TryGetValue(brandName, out firstPeriodData))
+                {
+                    analyticsData.Period1UnitsSold = firstPeriodData.PeriodUnitsSold;
+                    analyticsData.Period1Revenue = firstPeriodData.PeriodRevenue;
+                }
+                
+                if (brandAnalyticsSecondPeriod.TryGetValue(brandName, out secondPeriodData))
+                {
+                    analyticsData.Period2UnitsSold = secondPeriodData.PeriodUnitsSold;
+                    analyticsData.Period2Revenue = secondPeriodData.PeriodRevenue;
+                }
+                
+                brandComparison.Add(analyticsData);
+            }
+        }
+        else if (brandAnalyticsFirstPeriod.TryGetValue(brand, out firstPeriodData) || 
+                brandAnalyticsSecondPeriod.TryGetValue(brand, out secondPeriodData))
         {
             var brandAnalytics = new BrandAnalyticsComparerDTO
             {
                 BrandName = brand,
-                Period1UnitsSold = firstPeriodData.PeriodUnitsSold,
-                Period1Revenue = firstPeriodData.PeriodRevenue,
-                Period2UnitsSold = secondPeriodData.PeriodUnitsSold,
-                Period2Revenue = secondPeriodData.PeriodRevenue
+                Period1UnitsSold = firstPeriodData?.PeriodUnitsSold ?? 0,
+                Period1Revenue = firstPeriodData?.PeriodRevenue ?? 0,
+                Period2UnitsSold = secondPeriodData?.PeriodUnitsSold ?? 0,
+                Period2Revenue = secondPeriodData?.PeriodRevenue ?? 0
             };
             
-            Console.WriteLine(brandAnalytics);
             brandComparison.Add(brandAnalytics);
         }
     }
     
-    protected void CompareAnalytics()
+    protected void CompareTwoTimePeriodsCategory(string category, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
     {
-        Console.WriteLine("Comparing "+selectedBrand);
+        CategoryPeriodDTO? firstPeriodData = null;
+        CategoryPeriodDTO? secondPeriodData = null;
+        
+        var categoryAnalyticsFirstPeriod = DataService.Analytics.CompareCategoriesInterval(category, fromDate1, toDate1);
+        var categoryAnalyticsSecondPeriod = DataService.Analytics.CompareCategoriesInterval(category, fromDate2, toDate2);
+        
+        if (string.IsNullOrEmpty(category))
+        {
+            var allCategoryNames = categoryAnalyticsFirstPeriod.Keys
+                .Union(categoryAnalyticsSecondPeriod.Keys)
+                .Distinct()
+                .ToList();
+                
+            foreach (var categoryName in allCategoryNames)
+            {
+                var analyticsData = new CategoryComparisonDTO
+                {
+                    CategoryName = categoryName,
+                    Period1UnitsSold = 0,
+                    Period1Revenue = 0,
+                    Period2UnitsSold = 0,
+                    Period2Revenue = 0
+                };
+                
+                if (categoryAnalyticsFirstPeriod.TryGetValue(categoryName, out firstPeriodData))
+                {
+                    analyticsData.Period1UnitsSold = firstPeriodData.PeriodUnitsSold;
+                    analyticsData.Period1Revenue = firstPeriodData.PeriodRevenue;
+                }
+                
+                if (categoryAnalyticsSecondPeriod.TryGetValue(categoryName, out secondPeriodData))
+                {
+                    analyticsData.Period2UnitsSold = secondPeriodData.PeriodUnitsSold;
+                    analyticsData.Period2Revenue = secondPeriodData.PeriodRevenue;
+                }
+                
+                categoryComparison.Add(analyticsData);
+            }
+        }
+        else if (categoryAnalyticsFirstPeriod.TryGetValue(category, out firstPeriodData) || 
+                categoryAnalyticsSecondPeriod.TryGetValue(category, out secondPeriodData))
+        {
+            var categoryAnalytics = new CategoryComparisonDTO
+            {
+                CategoryName = category,
+                Period1UnitsSold = firstPeriodData?.PeriodUnitsSold ?? 0,
+                Period1Revenue = firstPeriodData?.PeriodRevenue ?? 0,
+                Period2UnitsSold = secondPeriodData?.PeriodUnitsSold ?? 0,
+                Period2Revenue = secondPeriodData?.PeriodRevenue ?? 0
+            };
+            
+            categoryComparison.Add(categoryAnalytics);
+        }
+    }
+    
+    protected void CompareAnalytics()
+    {        
+        brandComparison.Clear();
+        categoryComparison.Clear();
+        
         CompareTwoTimePeriodsBrand(selectedBrand, fromDate1, toDate1, fromDate2, toDate2);        
+        
+        if (DataService.GetAllCategories().Any())
+        {
+            CompareTwoTimePeriodsCategory(selectedCategory, fromDate1, toDate1, fromDate2, toDate2);
+        }
+        
         StateHasChanged();
     }
 

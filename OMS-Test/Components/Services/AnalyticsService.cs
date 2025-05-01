@@ -65,7 +65,6 @@ public class AnalyticsService
         var ordersInRange = _dataService.OrderLines
             .Where(order => order.Date >= fromDate && order.Date <= toDate)
             .ToList();
-
         
         foreach (var order in ordersInRange)
         {
@@ -73,9 +72,12 @@ public class AnalyticsService
             {
                 var product = _dataService.Products.FirstOrDefault(p => p.ProductID == lineItem.ProductUuid);
                 
-                if (product == null || 
-                    (product.BrandName == null) || 
-                    (!string.IsNullOrEmpty(brandName) && product.BrandName != brandName))
+                if (product == null || product.BrandName == null)
+                {
+                    continue;
+                }
+                
+                if (!string.IsNullOrEmpty(brandName) && product.BrandName != brandName)
                 {
                     continue;
                 }
@@ -88,8 +90,7 @@ public class AnalyticsService
                     {
                         BrandName = currentBrand,
                         PeriodUnitsSold = 0,
-                        PeriodRevenue = 0,
-    
+                        PeriodRevenue = 0
                     };
                     brandResults[currentBrand] = brandData;
                 }
@@ -100,5 +101,58 @@ public class AnalyticsService
         }
         
         return brandResults;    
+    }
+    
+    /// <summary>
+    /// This method analyzes and compares product categories based on order data.
+    /// It finds all products with the given category name and returns sales data for the specified time period.
+    /// </summary>
+    public Dictionary<string, CategoryPeriodDTO> CompareCategoriesInterval(string categoryName, DateOnly from, DateOnly to)
+    {
+        Dictionary<string, CategoryPeriodDTO> categoryResults = new();
+        
+        var fromDate = from.ToDateTime(TimeOnly.MinValue);
+        var toDate = to.ToDateTime(TimeOnly.MaxValue);
+        
+        var ordersInRange = _dataService.OrderLines
+            .Where(order => order.Date >= fromDate && order.Date <= toDate)
+            .ToList();
+
+        
+        foreach (var order in ordersInRange)
+        {
+            foreach (var lineItem in order.LineElements)
+            {
+                var product = _dataService.Products.FirstOrDefault(p => p.ProductID == lineItem.ProductUuid);
+                
+                if (product == null || product.ProductCategory == null)
+                {
+                    continue;
+                }
+                
+                if (!string.IsNullOrEmpty(categoryName) && product.ProductCategory != categoryName)
+                {
+                    continue;
+                }
+                
+                string currentCategory = product.ProductCategory;
+                
+                if (!categoryResults.TryGetValue(currentCategory, out CategoryPeriodDTO? categoryData))
+                {
+                    categoryData = new CategoryPeriodDTO
+                    {
+                        CategoryName = currentCategory,
+                        PeriodUnitsSold = 0,
+                        PeriodRevenue = 0
+                    };
+                    categoryResults[currentCategory] = categoryData;
+                }
+                
+                categoryData.PeriodUnitsSold += lineItem.Amount;
+                categoryData.PeriodRevenue += lineItem.Price * lineItem.Amount;
+            }
+        }
+        
+        return categoryResults;    
     }
 }

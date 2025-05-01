@@ -158,28 +158,22 @@ public class DataService
 
     public List<string> GetAllBrands()
     {
-        List<string> Brands = new();
-        foreach (var product in Products)
-        {
-            if (product.BrandName != null)
-            {
-                Brands.Add(product.BrandName);   
-                Console.WriteLine("Added brand "+product.BrandName);
-            }
-        }
-        return Brands;
+        return Products
+            .Where(product => !string.IsNullOrEmpty(product.BrandName))
+            .Select(product => product.BrandName!)
+            .Distinct()
+            .OrderBy(brand => brand)
+            .ToList();
     }
+
     public List<string> GetAllCategories()
     {
-        List<string> Categories = new();
-        foreach (var product in Products)
-        {
-            if (product.ProductCategory != null)
-            {
-                Categories.Add(product.ProductCategory);   
-            }
-        }
-        return Categories;
+        return Products
+            .Where(product => !string.IsNullOrEmpty(product.ProductCategory))
+            .Select(product => product.ProductCategory!)
+            .Distinct()
+            .OrderBy(category => category)
+            .ToList();
     }
     
     public AnalyticsService GetAnalyticsService()
