@@ -7,119 +7,204 @@
 @inject IEmailService EmailService
 @rendermode InteractiveServer
 
-<PageTitle>Brand Insights</PageTitle>
+<PageTitle>Analytics</PageTitle>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="topnav">
     <a href="./OMS/Manage">OMS</a>
     <a href="./OMS/SalesReportsOverview">Sales Reports</a>
 </div>
 
-<h2>Brand Insights</h2>
+<div class="container mt-4">
+    <h3>Brand Analytics</h3>
 
-<h4>Select Periods to Compare</h4>
-
-<div class="d-flex flex-wrap align-items-end gap-4 mb-4">
-    <div class="d-flex align-items-center gap-2">
-        <strong>Period 1</strong>
-        <label>From:</label>
-        <InputDate @bind-Value="fromDate1" class="form-control" style="width: 150px;" />
-        <label>To:</label>
-        <InputDate @bind-Value="toDate1" class="form-control" style="width: 150px;" />
+    <div class="card mb-3">
+        <div class="card-header bg-light">
+            <small class="mb-0">Filter Options</small>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-3" style="min-width: 70px;">Period 1:</strong>
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <small class="me-2">From:</small>
+                            <DateInput TValue="DateOnly" @bind-Value="@fromDate1" Placeholder="From Date" class="form-control-sm me-2" />
+                            <small class="mx-2">To:</small>
+                            <DateInput TValue="DateOnly" @bind-Value="@toDate1" Placeholder="To Date" class="form-control-sm" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-3" style="min-width: 70px;">Period 2:</strong>
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <small class="me-2">From:</small>
+                            <DateInput TValue="DateOnly" @bind-Value="@fromDate2" Placeholder="From Date" class="form-control-sm me-2" />
+                            <small class="mx-2">To:</small>
+                            <DateInput TValue="DateOnly" @bind-Value="@toDate2" Placeholder="To Date" class="form-control-sm" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-5">
+                    <strong class="form-label">Brand:</strong>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                        <input type="text" class="form-control" @bind="selectedBrand" @bind:event="oninput" 
+                            placeholder="Enter brand name or leave empty for all brands" list="brandSuggestions" />
+                        <datalist id="brandSuggestions">
+                            @foreach (var brand in allBrands.Take(4))
+                            {
+                                <option value="@brand">@brand</option>
+                            }
+                        </datalist>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <strong class="form-label">Category:</strong>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-collection"></i></span>
+                        <input type="text" class="form-control" @bind="selectedCategory" @bind:event="oninput"
+                            placeholder="Enter category name or leave empty for all categories" list="categorySuggestions" />
+                        <datalist id="categorySuggestions">
+                            @foreach (var category in allCategories.Take(4))
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </datalist>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" @onclick="CompareAnalytics">
+                        <i class="bi bi-search me-1"></i> Apply
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
-        <strong>Period 2</strong>
-        <label>From:</label>
-        <InputDate @bind-Value="fromDate2" class="form-control" style="width: 150px;" />
-        <label>To:</label>
-        <InputDate @bind-Value="toDate2" class="form-control" style="width: 150px;" />
+    <div class="card mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <small class="mb-0">Brand Analytics Comparison</small>
+        </div>
+        <div class="card-body">
+            @if (brandComparison.Count == 0)
+            {
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-bar-chart" style="font-size: 2rem;"></i>
+                    <p class="mt-2">Select date ranges and click "Apply" to view brand analytics</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Brand</th>
+                                <th>Units Sold (P1)</th>
+                                <th>Revenue (P1)</th>
+                                <th>Units Sold (P2)</th>
+                                <th>Revenue (P2)</th>
+                                <th>Units Diff.</th>
+                                <th>Revenue Diff.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var brand in brandComparison.Take(4))
+                            {
+                                <tr>
+                                    <td><strong>@brand.BrandName</strong></td>
+                                    <td>@brand.Period1UnitsSold</td>
+                                    <td>@brand.Period1Revenue.ToString("C")</td>
+                                    <td>@brand.Period2UnitsSold</td>
+                                    <td>@brand.Period2Revenue.ToString("C")</td>
+                                    <td class="@GetDiffClass(brand.Period2UnitsSold - brand.Period1UnitsSold)">
+                                        @GetDiffPrefix(brand.Period2UnitsSold - brand.Period1UnitsSold)@(brand.Period2UnitsSold - brand.Period1UnitsSold)
+                                    </td>
+                                    <td class="@GetDiffClass(brand.Period2Revenue - brand.Period1Revenue)">
+                                        @GetDiffPrefix(brand.Period2Revenue - brand.Period1Revenue)@((brand.Period2Revenue - brand.Period1Revenue).ToString("C"))
+                                    </td>
+                                </tr>
+                            }
+                            @if (brandComparison.Count > 4)
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <em>Showing 4 of @brandComparison.Count brands. Refine your search to see specific results.</em>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <small class="mb-0">Category Analytics Comparison</small>
+        </div>
+        <div class="card-body">
+            @if (categoryComparison.Count == 0)
+            {
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-diagram-3" style="font-size: 2rem;"></i>
+                    <p class="mt-2">Select date ranges and click "Apply" to view category analytics</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Units Sold (P1)</th>
+                                <th>Revenue (P1)</th>
+                                <th>Units Sold (P2)</th>
+                                <th>Revenue (P2)</th>
+                                <th>Units Diff.</th>
+                                <th>Revenue Diff.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var category in categoryComparison.Take(4))
+                            {
+                                <tr>
+                                    <td><strong>@category.CategoryName</strong></td>
+                                    <td>@category.Period1UnitsSold</td>
+                                    <td>@category.Period1Revenue.ToString("C")</td>
+                                    <td>@category.Period2UnitsSold</td>
+                                    <td>@category.Period2Revenue.ToString("C")</td>
+                                    <td class="@GetDiffClass(category.Period2UnitsSold - category.Period1UnitsSold)">
+                                        @GetDiffPrefix(category.Period2UnitsSold - category.Period1UnitsSold)@(category.Period2UnitsSold - category.Period1UnitsSold)
+                                    </td>
+                                    <td class="@GetDiffClass(category.Period2Revenue - category.Period1Revenue)">
+                                        @GetDiffPrefix(category.Period2Revenue - category.Period1Revenue)@((category.Period2Revenue - category.Period1Revenue).ToString("C"))
+                                    </td>
+                                </tr>
+                            }
+                            @if (categoryComparison.Count > 4)
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <em>Showing 4 of @categoryComparison.Count categories. Refine your search to see specific results.</em>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
     </div>
 </div>
-
-<h5>Filters</h5>
-<div class="mb-3 d-flex align-items-end gap-3">
-    <div>
-        <label>Brand (only for Brand Comparison):</label>
-        <select class="form-select" @bind="selectedBrand">
-            <option value="">-- All Brands --</option>
-            @foreach (var brand in allBrands)
-            {
-                <option value="@brand">@brand</option>
-            }
-        </select>
-    </div>
-
-    <div>
-        <label>Category (only for Category Comparison):</label>
-        <select class="form-select" @bind="selectedCategory">
-            <option value="">-- All Categories --</option>
-            @foreach (var category in allCategories)
-            {
-                <option value="@category">@category</option>
-            }
-        </select>
-    </div>
-
-    <button class="btn btn-primary" @onclick="CompareAnalytics">Apply & Compare</button>
-</div>
-
-<h3>Brand Analytics Comparison</h3>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Brand</th>
-            <th>Units Sold (P1)</th>
-            <th>Revenue (P1)</th>
-            <th>Units Sold (P2)</th>
-            <th>Revenue (P2)</th>
-            <th>Units Diff.</th>
-            <th>Revenue Diff.</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var brand in brandComparison)
-        {
-            <tr>
-                <td>@brand.BrandName</td>
-                <td>@brand.Period1UnitsSold</td>
-                <td>@brand.Period1Revenue.ToString("C")</td>
-                <td>@brand.Period2UnitsSold</td>
-                <td>@brand.Period2Revenue.ToString("C")</td>
-                <td>@(brand.Period2UnitsSold - brand.Period1UnitsSold)</td>
-                <td>@((brand.Period2Revenue - brand.Period1Revenue).ToString("C"))</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<h3>Category Analytics Comparison</h3>
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Category</th>
-            <th>Units Sold (P1)</th>
-            <th>Revenue (P1)</th>
-            <th>Units Sold (P2)</th>
-            <th>Revenue (P2)</th>
-            <th>Units Diff.</th>
-            <th>Revenue Diff.</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var category in categoryComparison)
-        {
-            <tr>
-                <td>@category.CategoryName</td>
-                <td>@category.Period1UnitsSold</td>
-                <td>@category.Period1Revenue.ToString("C")</td>
-                <td>@category.Period2UnitsSold</td>
-                <td>@category.Period2Revenue.ToString("C")</td>
-                <td>@(category.Period2UnitsSold - category.Period1UnitsSold)</td>
-                <td>@((category.Period2Revenue - category.Period1Revenue).ToString("C"))</td>
-            </tr>
-        }
-    </tbody>
-</table>
 
 @code {
     private DateOnly fromDate1 = new(2025, 4, 1);
@@ -140,16 +225,36 @@
         StateHasChanged();
     }
 
+    private string GetDiffClass(decimal diff)
+    {
+        return diff > 0 ? "text-success" : (diff < 0 ? "text-danger" : "");
+    }
+
+    private string GetDiffClass(int diff)
+    {
+        return diff > 0 ? "text-success" : (diff < 0 ? "text-danger" : "");
+    }
+
+    private string GetDiffPrefix(decimal diff)
+    {
+        return diff > 0 ? "+" : "";
+    }
+
+    private string GetDiffPrefix(int diff)
+    {
+        return diff > 0 ? "+" : "";
+    }
+
     protected void CompareTwoTimePeriodsBrand(string brand, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
     {
-        brandComparison.Clear();
-        
         BrandComparisonDTO? firstPeriodData = null;
         BrandComparisonDTO? secondPeriodData = null;
         
         var brandAnalyticsFirstPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate1, toDate1);
         var brandAnalyticsSecondPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate2, toDate2);
         
+        Console.WriteLine($"Brand: {brand}");
+        Console.WriteLine($"First period entries: {brandAnalyticsFirstPeriod.Count}, Second period entries: {brandAnalyticsSecondPeriod.Count}");
         
         if (string.IsNullOrEmpty(brand))
         {
@@ -258,16 +363,15 @@
     }
     
     protected void CompareAnalytics()
-    {        
+    {
+        Console.WriteLine($"Comparing brand: '{selectedBrand}' and category: '{selectedCategory}'");
+        
         brandComparison.Clear();
         categoryComparison.Clear();
         
         CompareTwoTimePeriodsBrand(selectedBrand, fromDate1, toDate1, fromDate2, toDate2);        
         
-        if (DataService.GetAllCategories().Any())
-        {
-            CompareTwoTimePeriodsCategory(selectedCategory, fromDate1, toDate1, fromDate2, toDate2);
-        }
+        CompareTwoTimePeriodsCategory(selectedCategory, fromDate1, toDate1, fromDate2, toDate2);
         
         StateHasChanged();
     }
