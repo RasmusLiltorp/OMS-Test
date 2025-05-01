@@ -100,7 +100,6 @@
             </div>
         </div>
 
-        <!-- Existing brand comparison card -->
         <div class="card mb-3">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <small class="mb-0">Brand Analytics Comparison</small>
@@ -160,7 +159,6 @@
             </div>
         </div>
 
-        <!-- Existing category comparison card -->
         <div class="card mb-3">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <small class="mb-0">Category Analytics Comparison</small>
@@ -224,16 +222,118 @@
     {
         <div class="card mb-3">
             <div class="card-header bg-light">
-                <small class="mb-0">Product Statistics</small>
+                <small class="mb-0">Product Sales Analysis</small>
             </div>
             <div class="card-body">
-                <div class="text-center text-muted py-5">
-                    <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3">Product Statistics</h5>
-                    <p class="mb-0">Product statistics view will be available here.</p>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-box"></i></span>
+                            <input type="text" class="form-control" @bind="selectedProduct" @bind:event="oninput" 
+                                placeholder="Enter product name" list="productSuggestions" />
+                            <datalist id="productSuggestions">
+                                @foreach (var product in allProducts.Take(10))
+                                {
+                                    <option value="@product.ProductID">@product.ProductName</option>
+                                }
+                            </datalist>
+                            <button class="btn btn-primary" @onclick="LoadProductSalesData">
+                                <i class="bi bi-search me-1"></i> View Sales
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-end align-items-center">
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-sm @(currentTimeRange.RangeType == "week" ? "btn-primary" : "btn-outline-primary")" @onclick="SwitchToWeekView">
+                                Weekly
+                            </button>
+                            <button type="button" class="btn btn-sm @(currentTimeRange.RangeType == "month" ? "btn-primary" : "btn-outline-primary")" @onclick="SwitchToMonthView">
+                                Monthly
+                            </button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="NavigateToPreviousPeriod">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                @GetTimeRangeDisplay()
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="NavigateToNextPeriod">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                @if (isProductDataLoaded && !string.IsNullOrEmpty(selectedProduct))
+                {
+                    <ProductStatisticsPanel 
+                        ProductName="@selectedProductName"
+                        Labels="@productChartData.Labels"
+                        UnitsSoldData="@productChartData.UnitsSoldData"
+                        HasData="@(productChartData.Labels.Count > 0)"
+                        DateLabels="@productChartData.DateLabels"
+                        IntervalType="@(currentTimeRange.RangeType == "week" ? "Weekly" : "Monthly")" />
+                }
+                else if (string.IsNullOrEmpty(selectedProduct))
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Select a Product</h5>
+                        <p class="mb-0">Enter a product name above to view sales statistics.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading product data...</p>
+                    </div>
+                }
             </div>
         </div>
+
+        @if (isProductDataLoaded && !string.IsNullOrEmpty(selectedProduct) && productSalesData.Count > 0)
+        {
+            <div class="card mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <small class="mb-0">Detailed Sales Data</small>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Units Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var period in productSalesData.OrderByDescending(d => d.Date).Take(10))
+                                {
+                                    <tr>
+                                        <td>@period.Date.ToString("MMM dd, yyyy")</td>
+                                        <td>@period.UnitsSold</td>
+                                        <td>@period.Revenue.ToString("C")</td>
+                                    </tr>
+                                }
+                                @if (productSalesData.Count > 10)
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center">
+                                            <em>Showing the most recent 10 of @productSalesData.Count records.</em>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 </div>
 
@@ -246,15 +346,277 @@
     private string selectedCategory { get; set; } = "";
     private string activeView { get; set; } = "brands";
 
+    // Product statistics properties
+    private string selectedProduct = "";
+    private string selectedProductId = "";
+    private string selectedProductName = "";
+    private bool isProductDataLoaded = false;
+    private List<ProductDTO> allProducts = new();
+    private List<ProductSalesDataDTO> productSalesData = new();
+    private ProductSalesChartDTO productChartData = new();
+    private ProductTimeRangeDTO currentTimeRange = new();
+    private List<string> productDateLabels = new();
+    
+    // Chart properties
+    private LineChart lineChart = default!;
+    private LineChartOptions lineChartOptions = default!;
+    private ChartData chartData = default!;
+
     private List<string> allBrands = new();
     private List<string> allCategories = new();
     private List<BrandAnalyticsComparerDTO> brandComparison = new();
     private List<CategoryComparisonDTO> categoryComparison = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         DataService.OrdersFetched += OrdersHasFetched;
+        
+        var today = DateTime.Today;
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+        var endOfWeek = startOfWeek.AddDays(6);
+        
+        currentTimeRange = new ProductTimeRangeDTO
+        {
+            StartDate = startOfWeek,
+            EndDate = endOfWeek,
+            RangeType = "week"
+        };
+        
+        lineChartOptions = new()
+        {
+            IndexAxis = "x",
+            Interaction = new Interaction { Mode = InteractionMode.Index, Intersect = false },
+            Responsive = true
+        };
+        
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && lineChart != null)
+        {
+            chartData = new ChartData { Labels = new List<string>(), Datasets = new List<IChartDataset>() };
+            await lineChart.InitializeAsync(chartData, lineChartOptions);
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    
+    private void LoadProductSalesData()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(selectedProduct))
+                return;
+                
+            isProductDataLoaded = false;
+            StateHasChanged();
+            
+            selectedProductId = selectedProduct;
+            var product = DataService.Products.FirstOrDefault(p => p.ProductID == selectedProductId);
+            selectedProductName = product?.ProductName ?? "Unknown Product";
+            
+            productSalesData = DataService.Analytics.GetProductSalesData(
+                selectedProductId,
+                currentTimeRange.StartDate,
+                currentTimeRange.EndDate);
+                
+            productChartData = DataService.Analytics.GetProductChartData(
+                selectedProductId,
+                currentTimeRange.StartDate,
+                currentTimeRange.EndDate,
+                currentTimeRange.RangeType);
+                
+            
+            if (productChartData.Labels.Count == 0)
+            {
+                productChartData.Labels.Add($"{currentTimeRange.StartDate:MMM dd}");
+                productChartData.UnitsSoldData.Add(0);
+                productChartData.RevenueData.Add(0);
+                productChartData.DateLabels.Add(currentTimeRange.StartDate);
+            }
+            
+            if (currentTimeRange.RangeType == "month")
+            {
+                int year = currentTimeRange.StartDate.Year;
+                int month = currentTimeRange.StartDate.Month;
+                int daysInMonth = DateTime.DaysInMonth(year, month);
+                
+                var unitsByDay = new Dictionary<int, int>();
+                var revenueByDay = new Dictionary<int, decimal>();
+                
+                for (int day = 1; day <= daysInMonth; day++)
+                {
+                    unitsByDay[day] = 0;
+                    revenueByDay[day] = 0;
+                }
+                
+                foreach (var sale in productSalesData)
+                {
+                    if (sale.Date.Month == month && sale.Date.Year == year)
+                    {
+                        int day = sale.Date.Day;
+                        unitsByDay[day] = sale.UnitsSold;
+                        revenueByDay[day] = sale.Revenue;
+                    }
+                }
+                
+                productChartData.Labels.Clear();
+                productChartData.UnitsSoldData.Clear();
+                productChartData.RevenueData.Clear();
+                productChartData.DateLabels.Clear();
+                
+                for (int day = 1; day <= daysInMonth; day++)
+                {
+                    var date = new DateTime(year, month, day);
+                    productChartData.Labels.Add(date.ToString("MMM dd"));
+                    productChartData.DateLabels.Add(date);
+                    productChartData.UnitsSoldData.Add(unitsByDay[day]);
+                    productChartData.RevenueData.Add(revenueByDay[day]);
+                }
+            }
+            
+            InvokeAsync(async () =>
+            {
+                try
+                {
+                    if (lineChart != null)
+                    {
+                        chartData = new ChartData 
+                        { 
+                            Labels = productChartData.Labels,
+                            Datasets = new List<IChartDataset>()
+                        };
+                        
+                        var unitColor = ColorUtility.CategoricalTwelveColors[0].ToColor();
+                        
+                        var unitsSoldDataset = new LineChartDataset
+                        {
+                            Label = "Units Sold",
+                            Data = productChartData.UnitsSoldData.Select(x => (double?)Convert.ToDouble(x)).ToList(),
+                            BackgroundColor = unitColor.ToRgbaString(),
+                            BorderColor = unitColor.ToRgbString(),
+                            PointRadius = new List<double> { 3 },
+                            PointHoverRadius = new List<double> { 5 }
+                        };
+                        
+                        chartData.Datasets.Add(unitsSoldDataset);
+                        
+                        await lineChart.UpdateAsync(chartData, lineChartOptions);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error updating chart: {ex.Message}");
+                }
+            });
+            
+            isProductDataLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading product data: {ex.Message}");
+            isProductDataLoaded = true;  
+            StateHasChanged();
+        }
+    }
+
+    
+    private void UpdateChartData()
+    {
+        if (lineChart == null || productChartData.Labels.Count == 0)
+            return;
+            
         StateHasChanged();
+    }
+    
+    private string GetTimeRangeDisplay()
+    {
+        if (currentTimeRange.RangeType == "week")
+        {
+            int weekNumber = System.Globalization.ISOWeek.GetWeekOfYear(currentTimeRange.StartDate);
+            return $"{currentTimeRange.StartDate:MMM dd} - {currentTimeRange.EndDate:MMM dd, yyyy} (Week {weekNumber})";
+        }
+        else
+        {
+            var startMonth = currentTimeRange.StartDate;
+            var lastDay = DateTime.DaysInMonth(startMonth.Year, startMonth.Month);
+            return $"{startMonth:MMMM yyyy} ({startMonth.Month}/1 - {startMonth.Month}/{lastDay})";
+        }
+    }
+
+    private void SwitchToWeekView()
+    {
+        ChangeTimeRangeType("week");
+    }
+    
+    private void SwitchToMonthView()
+    {
+        ChangeTimeRangeType("month");
+    }
+
+    private void ChangeTimeRangeType(string rangeType)
+    {
+        if (rangeType == currentTimeRange.RangeType)
+            return;
+            
+        currentTimeRange.RangeType = rangeType;
+        
+        var today = DateTime.Today;
+        
+        if (rangeType == "week")
+        {
+            var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+            var endOfWeek = startOfWeek.AddDays(6);
+            currentTimeRange.StartDate = startOfWeek;
+            currentTimeRange.EndDate = endOfWeek;
+        }
+        else 
+        {
+            var startOfMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            currentTimeRange.StartDate = startOfMonth;
+            currentTimeRange.EndDate = endOfMonth;
+        }
+        
+        if (!string.IsNullOrEmpty(selectedProduct))
+        {
+            LoadProductSalesData();
+        }
+    }
+    
+    private void NavigateToPreviousPeriod()
+    {
+        var prevRange = DataService.Analytics.GetAdjacentTimeRange(
+            currentTimeRange.StartDate, 
+            currentTimeRange.EndDate, 
+            currentTimeRange.RangeType, 
+            false);
+            
+        currentTimeRange = prevRange;
+        
+        if (!string.IsNullOrEmpty(selectedProduct))
+        {
+            LoadProductSalesData();
+        }
+    }
+    
+    private void NavigateToNextPeriod()
+    {
+        var nextRange = DataService.Analytics.GetAdjacentTimeRange(
+            currentTimeRange.StartDate, 
+            currentTimeRange.EndDate, 
+            currentTimeRange.RangeType, 
+            true);
+            
+        currentTimeRange = nextRange;
+        
+        if (!string.IsNullOrEmpty(selectedProduct))
+        {
+            LoadProductSalesData();
+        }
     }
 
     private string GetDiffClass(decimal diff)
@@ -275,6 +637,22 @@
     private string GetDiffPrefix(int diff)
     {
         return diff > 0 ? "+" : "";
+    }
+
+    private void SwitchToBrandsView()
+    {
+        SwitchView("brands");
+    }
+
+    private void SwitchToProductsView()
+    {
+        SwitchView("products");
+    }
+    
+    private void SwitchView(string view)
+    {
+        activeView = view;
+        StateHasChanged();
     }
 
     protected void CompareTwoTimePeriodsBrand(string brand, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
@@ -390,22 +768,6 @@
             categoryComparison.Add(categoryAnalytics);
         }
     }
-
-    private void SwitchView(string view)
-    {
-        activeView = view;
-        StateHasChanged();
-    }
-
-    private void SwitchToBrandsView()
-    {
-        SwitchView("brands");
-    }
-
-    private void SwitchToProductsView()
-    {
-        SwitchView("products");
-    }
     
     protected void CompareAnalytics()
     {        
@@ -422,6 +784,7 @@
     public void OrdersHasFetched(object? sender, EventArgs e){
         allBrands = DataService.GetAllBrands();
         allCategories = DataService.GetAllCategories();
+        allProducts = DataService.Products;
         StateHasChanged();
     }
 }

@@ -16,3 +16,15 @@
     background-color: #ddd;
     color: black;
 }
+
+.product-chart-container {
+    height: 400px;
+    margin: 15px 0;
+    position: relative;
+}
+
+@media (max-width: 768px) {
+    .product-chart-container {
+        height: 300px;
+    }
+}
