@@ -44,6 +44,11 @@
     private int datasetsCount;
     private int labelsCount;
     
+    private string _previousIntervalType = "";
+    private DateTime? _previousFirstDate;
+    private int _previousDataCount = 0;
+    private int _previousDataSum = 0;
+    
     private List<string> FormattedLabels => FormatLabels();
     
     private List<string> FormatLabels()
@@ -68,6 +73,29 @@
                 return allDaysInMonth;
             }
         }
+        else if (IntervalType.Equals("Weekly", StringComparison.OrdinalIgnoreCase))
+        {
+            if (DateLabels.Count > 0)
+            {
+                var orderedDates = DateLabels.OrderBy(d => d).ToList();
+                var firstDate = orderedDates.FirstOrDefault();
+                
+              
+                int daysToSubtract = firstDate.DayOfWeek == DayOfWeek.Sunday ? 6 : ((int)firstDate.DayOfWeek - 1);
+                
+                var startOfWeek = firstDate.Date.AddDays(-daysToSubtract);
+                
+                var allDaysInWeek = new List<string>();
+                
+                for (int dayOffset = 0; dayOffset < 7; dayOffset++)
+                {
+                    var date = startOfWeek.AddDays(dayOffset);
+                    allDaysInWeek.Add(date.ToString("ddd, MMM dd"));
+                }
+                
+                return allDaysInWeek;
+            }
+        }
         
         return Labels;
     }
@@ -76,7 +104,31 @@
     {
         if (HasData && Labels.Count > 0)
         {
-            UpdateChartData();
+            DateTime? currentFirstDate = DateLabels.Count > 0 ? 
+                DateLabels.OrderBy(d => d).FirstOrDefault() : null;
+                
+            int currentDataSum = UnitsSoldData.Sum();
+            bool hasChanges = false;
+            
+            if (_previousIntervalType != IntervalType || 
+                _previousDataCount != UnitsSoldData.Count ||
+                _previousDataSum != currentDataSum ||
+                (currentFirstDate != null && _previousFirstDate != currentFirstDate))
+            {
+                hasChanges = true;
+                
+                _previousIntervalType = IntervalType;
+                _previousFirstDate = currentFirstDate;
+                _previousDataCount = UnitsSoldData.Count;
+                _previousDataSum = currentDataSum;
+            }
+            
+            if (hasChanges)
+            {
+                UpdateChartData();
+                
+                _chartNeedsUpdate = true;
+            }
         }
         
         base.OnParametersSet();
@@ -92,6 +144,7 @@
         };
         
         UpdateChartData();
+        _chartNeedsUpdate = true;
     }
     
     private void AddProductDatasets()
@@ -126,6 +179,8 @@
         AddProductDatasets();
     }
     
+    private bool _chartNeedsUpdate = false;
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (lineChart != null)
@@ -136,11 +191,10 @@
                 {
                     await lineChart.InitializeAsync(chartData, lineChartOptions);
                 }
-                else if (_lastDataCount != Labels.Count || _lastIntervalType != IntervalType)
+                else if (_chartNeedsUpdate)
                 {
                     await lineChart.UpdateAsync(chartData, lineChartOptions);
-                    _lastDataCount = Labels.Count;
-                    _lastIntervalType = IntervalType;
+                    _chartNeedsUpdate = false;
                 }
             }
             catch (Exception ex)
@@ -151,7 +205,4 @@
         
         await base.OnAfterRenderAsync(firstRender);
     }
-    
-    private int _lastDataCount = 0;
-    private string _lastIntervalType = "";
 }

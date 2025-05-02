@@ -283,15 +283,6 @@
                         <p class="mb-0">Enter a product name above to view sales statistics.</p>
                     </div>
                 }
-                else
-                {
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Loading product data...</p>
-                    </div>
-                }
             </div>
         </div>
 
@@ -476,6 +467,46 @@
                     productChartData.RevenueData.Add(revenueByDay[day]);
                 }
             }
+            else if (currentTimeRange.RangeType == "week")
+            {
+                var startDate = currentTimeRange.StartDate; // monday
+                var endDate = currentTimeRange.EndDate;   // sunday
+                
+                var unitsByDay = new Dictionary<DateTime, int>();
+                var revenueByDay = new Dictionary<DateTime, decimal>();
+                
+                for (int day = 0; day < 7; day++)
+                {
+                    var date = startDate.AddDays(day);
+                    unitsByDay[date] = 0;
+                    revenueByDay[date] = 0;
+                }
+                
+                foreach (var sale in productSalesData)
+                {
+                    var saleDate = sale.Date.Date;
+                    if (saleDate >= startDate && saleDate <= endDate)
+                    {
+                        unitsByDay[saleDate] = sale.UnitsSold;
+                        revenueByDay[saleDate] = sale.Revenue;
+                    }
+                }
+                
+                productChartData.Labels.Clear();
+                productChartData.UnitsSoldData.Clear();
+                productChartData.RevenueData.Clear();
+                productChartData.DateLabels.Clear();
+                
+                // Create data for all 7 days of the week
+                for (int day = 0; day < 7; day++)
+                {
+                    var date = startDate.AddDays(day);
+                    productChartData.DateLabels.Add(date);
+                    productChartData.Labels.Add(date.ToString("ddd, MMM dd"));
+                    productChartData.UnitsSoldData.Add(unitsByDay[date]);
+                    productChartData.RevenueData.Add(revenueByDay[date]);
+                }
+            }
             
             InvokeAsync(async () =>
             {
@@ -568,12 +599,14 @@
         
         if (rangeType == "week")
         {
-            var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
-            var endOfWeek = startOfWeek.AddDays(6);
+            int daysToSubtract = today.DayOfWeek == DayOfWeek.Sunday ? 6 : ((int)today.DayOfWeek - 1);
+            
+            var startOfWeek = today.AddDays(-daysToSubtract);
+            var endOfWeek = startOfWeek.AddDays(6);  
             currentTimeRange.StartDate = startOfWeek;
             currentTimeRange.EndDate = endOfWeek;
         }
-        else 
+        else
         {
             var startOfMonth = new DateTime(today.Year, today.Month, 1);
             var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
