@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DTOs;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace OMS_Services;
 
@@ -11,17 +10,17 @@ namespace OMS_Services;
 class PIMApiService
 {
     private readonly HttpClient _http = new();
-   // private readonly JsonSerializerOptions _jsonOptions = new();
+    // private readonly JsonSerializerOptions _jsonOptions = new();
 
-    // temporary
+    // Temporary mock data
     public Task<List<ProductDTO?>> GetAllProductsAsync() =>
         Task.FromResult(new List<ProductDTO?>
         {
-            new() { ProductID="product-1", ProductName="test", Price=123, Weight=1.53m },
-            new() { ProductID="product-2", ProductName="tes2", Price=1234, Weight=1.234m },
-            new() { ProductID="product-3", ProductName="test3", Price=1235, Weight=1.235m }
+            new() { ProductID="product-1", ProductName="test", Price=123, Weight=1.53m, BrandName="brand1", ProductCategory="cat1" },
+            new() { ProductID="product-2", ProductName="test2", Price=1234, Weight=1.234m, BrandName="brand2", ProductCategory="cat2" },
+            new() { ProductID="product-3", ProductName="test3", Price=1235, Weight=1.235m, BrandName="brand3", ProductCategory="cat1" }
         });
-    }
+}
 
 /*
      public async Task<ProductDTO?> GetProductAsync(string productId)
@@ -66,4 +65,3 @@ class PIMApiService
         }
     }
     */
-

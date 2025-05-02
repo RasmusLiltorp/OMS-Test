@@ -1,0 +1,163 @@
+@using BlazorBootstrap
+@using System.Globalization
+
+<div class="card mb-3">
+    <div class="card-header bg-light">
+        <small class="mb-0">@ProductName Sales Analysis - @IntervalType View</small>
+    </div>
+    <div class="card-body">
+        @if (HasData)
+        {
+            <div class="product-chart-container text-center">
+                <h5 class="mb-3">Sales Trends</h5>
+                <div class="d-flex justify-content-center">
+                    <LineChart @ref="lineChart" Width="800" Height="400" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ProductName { get; set; } = "";
+    
+    [Parameter]
+    public List<string> Labels { get; set; } = new();
+    
+    [Parameter]
+    public List<int> UnitsSoldData { get; set; } = new();
+    
+    [Parameter]
+    public bool HasData { get; set; } = false;
+    
+    [Parameter]
+    public string IntervalType { get; set; } = "Weekly";
+    
+    [Parameter]
+    public List<DateTime> DateLabels { get; set; } = new();
+    
+    private LineChart lineChart = default!;
+    private LineChartOptions lineChartOptions = default!;
+    private ChartData chartData = default!;
+    
+    private string _previousIntervalType = "";
+    private int _previousDataCount = 0;
+    private int _previousDataSum = 0;
+    private DateTime? _previousStartDate = null;
+    
+    /// <summary>
+    // This component displays a line chart of product sales data, 
+    // efficiently updating only when values change by tracking the
+    // interval type, label count, data sum, and start date to avoid unnecessary renders.
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (HasData && Labels.Count > 0)
+        {
+            DateTime? currentStartDate = DateLabels.Count > 0 ? 
+                DateLabels.OrderBy(d => d).FirstOrDefault() : null;
+                
+            int currentDataSum = UnitsSoldData.Sum();
+            bool hasChanges = _previousIntervalType != IntervalType || 
+                             _previousDataCount != Labels.Count ||
+                             _previousDataSum != currentDataSum ||
+                             (_previousStartDate != currentStartDate);
+            
+            if (hasChanges)
+            {
+                _previousIntervalType = IntervalType;
+                _previousDataCount = Labels.Count;
+                _previousDataSum = currentDataSum;
+                _previousStartDate = currentStartDate;
+                
+                UpdateChartData();
+                _chartNeedsUpdate = true;
+            }
+        }
+        
+        base.OnParametersSet();
+    }
+    
+    protected override void OnInitialized()
+    {
+        lineChartOptions = new()
+        {
+            IndexAxis = "x",
+            Interaction = new Interaction { Mode = InteractionMode.Index, Intersect = false },
+            Responsive = true,
+        };
+        
+        UpdateChartData();
+        _chartNeedsUpdate = true;
+    }
+    
+    /// <summary>
+    /// Adds datasets to the chart data for product sales.
+    /// </summary>
+    private void AddProductDatasets()
+    {
+        if (!HasData || Labels.Count == 0) return;
+        
+        var datasets = new List<IChartDataset>();
+        
+        var unitsSoldColor = ColorUtility.CategoricalTwelveColors[0].ToColor();
+        var unitsSoldDataset = new LineChartDataset
+        {
+            Label = "Units Sold",
+            Data = UnitsSoldData.Select(x => (double?)Convert.ToDouble(x)).ToList(),
+            BackgroundColor = unitsSoldColor.ToRgbaString(),
+            BorderColor = unitsSoldColor.ToRgbString(),
+            PointRadius = new List<double> { 5 },
+            PointHoverRadius = new List<double> { 8 },
+        };
+        datasets.Add(unitsSoldDataset);
+        
+        chartData.Datasets = datasets;
+    }
+    
+    /// <summary>
+    /// Updates the chart data with the current labels and datasets.
+    /// </summary>
+    private void UpdateChartData()
+    {
+        chartData = new ChartData 
+        { 
+            Labels = Labels,
+            Datasets = new List<IChartDataset>() 
+        };
+        
+        AddProductDatasets();
+    }
+    
+    private bool _chartNeedsUpdate = false;
+    
+    /// <summary>
+    /// This method is called after the component has rendered.
+    /// It initializes or updates the chart based on the current data.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (lineChart != null)
+        {
+            try
+            {
+                if (firstRender)
+                {
+                    await lineChart.InitializeAsync(chartData, lineChartOptions);
+                }
+                else if (_chartNeedsUpdate)
+                {
+                    await lineChart.UpdateAsync(chartData, lineChartOptions);
+                    _chartNeedsUpdate = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error with chart: {ex.Message}");
+            }
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

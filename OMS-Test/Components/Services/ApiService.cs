@@ -25,13 +25,10 @@ public class ApiService
         };
     }
 
-    /// <summary>
-    /// Gets multiple orders from the backend.
-    /// </summary>
     public async Task<RootDTO?> GetMultipleOrdersAsync(int amount)
     {
         try
-        {            
+        {
             var response = await _http.GetFromJsonAsync<RootDTO>(
                 $"api/order/?amount={amount}",
                 _jsonOptions
@@ -58,11 +55,6 @@ public class ApiService
         }
     }
 
-    /// <summary>
-    /// Patches an order with the given orderId and patchData. 
-    /// "patchData" should be a JSON object with the properties to be updated.
-    /// Example usage: "var patchData = new { fulfillment_state = 2 };"
-    /// </summary>
     public async Task<RootDTO?> PatchOrderAsync(string orderId, object patchData)
     {
         try
@@ -72,32 +64,30 @@ public class ApiService
                 PropertyNamingPolicy = new KebabCaseNamingPolicy(),
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
-            
+
             var jsonContent = JsonSerializer.Serialize(patchData, options);
-            
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            
+
             var response = await _http.PatchAsync($"api/order/{orderId}", content);
-            
+
             response.EnsureSuccessStatusCode();
-            
+
             var responseString = await response.Content.ReadAsStringAsync();
-            
             using (JsonDocument doc = JsonDocument.Parse(responseString))
             {
                 string status = doc.RootElement.GetProperty("status").GetString() ?? "Error";
-                
+
                 var result = new RootDTO { Status = status };
-                
+
                 if (doc.RootElement.TryGetProperty("data", out JsonElement dataElement))
                 {
                     if (dataElement.ValueKind == JsonValueKind.Object)
                     {
                         var singleOrder = JsonSerializer.Deserialize<OrderDTO>(
-                            dataElement.GetRawText(), 
+                            dataElement.GetRawText(),
                             _jsonOptions
                         );
-                        
+
                         if (singleOrder != null)
                         {
                             result.Data = new List<OrderDTO> { singleOrder };
@@ -105,11 +95,13 @@ public class ApiService
                     }
                     else if (dataElement.ValueKind == JsonValueKind.Array)
                     {
-                        result.Data = JsonSerializer
-                        .Deserialize<List<OrderDTO>>(dataElement.GetRawText(), _jsonOptions)!;
+                        result.Data = JsonSerializer.Deserialize<List<OrderDTO>>(
+                            dataElement.GetRawText(),
+                            _jsonOptions
+                        ) ?? new List<OrderDTO>();
                     }
                 }
-                
+
                 return result;
             }
         }
@@ -120,12 +112,12 @@ public class ApiService
         }
     }
 
-    public async Task<RootDTO?> GetOrderAsync(string orderID)
+    public async Task<RootDTO?> GetOrderAsync(string orderId)
     {
         try
         {
             var response = await _http.GetFromJsonAsync<RootDTO>(
-                $"api/order/{orderID}",
+                $"api/order/{orderId}",
                 _jsonOptions
             );
             if (response == null || response.Data == null || response.Status != "Success")
@@ -148,11 +140,6 @@ public class ApiService
         }
     }
 
-    /// <summary>
-    /// Deletes an order from the backend by orderId.
-    /// </summary>
-    /// <param name="orderId">The ID of the order to delete.</param>
-    /// <returns>A RootDTO object containing the status and data of the response.</returns>
     public async Task<RootDTO?> DeleteOrderAsync(string orderId)
     {
         try
@@ -184,14 +171,10 @@ public class ApiService
         }
     }
 
-    /// <summary>
-    /// Posts an order line to the backend.
-    /// </summary>s
     public async Task<RootDTO?> PostOrderLineToBackend(OrderDTO orderDto)
     {
         try
         {
-            var json = JsonSerializer.Serialize(orderDto, _jsonOptions);
             var response = await _http.PostAsJsonAsync("api/order/", orderDto, _jsonOptions);
 
             if (response == null)
@@ -203,6 +186,7 @@ public class ApiService
                     Data = new()
                 };
             }
+
             var result = await response.Content.ReadFromJsonAsync<RootDTO>(_jsonOptions);
             if (result == null)
             {
@@ -227,8 +211,9 @@ public class ApiService
     }
 }
 
-
-// For converting the JSON property names to kebab-case
+/// <summary>
+/// Converts C# property names to kebab-case (e.g., "totalCost" -> "total-cost").
+/// </summary>
 public class KebabCaseNamingPolicy : JsonNamingPolicy
 {
     public override string ConvertName(string name)
@@ -237,11 +222,11 @@ public class KebabCaseNamingPolicy : JsonNamingPolicy
             return name;
 
         var builder = new StringBuilder();
-        
+
         for (int i = 0; i < name.Length; i++)
         {
             char c = name[i];
-            
+
             if (c == '_')
             {
                 builder.Append('-');
@@ -256,7 +241,7 @@ public class KebabCaseNamingPolicy : JsonNamingPolicy
                 builder.Append(char.ToLowerInvariant(c));
             }
         }
-        
+
         return builder.ToString();
     }
 }

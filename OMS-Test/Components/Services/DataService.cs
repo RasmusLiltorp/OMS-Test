@@ -16,10 +16,12 @@ public class DataService
 {
     private readonly ApiService _apiService;
     private readonly PIMApiService _pimApiService;
+    private readonly AnalyticsService _analyticsService;
     public List<ProductDTO> Products { get; private set; } = new();
     private readonly SemaphoreSlim _dataInitLock = new SemaphoreSlim(1, 1);
 
     public List<OrderDTO> OrderLines { get; private set; } = new();
+
     public event EventHandler OrdersFetched = delegate { };
 
     public DataService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
@@ -31,10 +33,15 @@ public class DataService
 
         _apiService = new ApiService(httpClient);
         _pimApiService = new PIMApiService();
+        _analyticsService = new AnalyticsService(this);
         
         // Initialize data
         _ = InitializeDataAsync();
     }
+
+    // expose analytics service
+    public AnalyticsService Analytics => _analyticsService;
+
 
     public async Task InitializeDataAsync()
     {
@@ -147,5 +154,30 @@ public class DataService
     public decimal CalculateWeight()
     {
         return 0;
+    }
+
+    public List<string> GetAllBrands()
+    {
+        return Products
+            .Where(product => !string.IsNullOrEmpty(product.BrandName))
+            .Select(product => product.BrandName!)
+            .Distinct()
+            .OrderBy(brand => brand)
+            .ToList();
+    }
+
+    public List<string> GetAllCategories()
+    {
+        return Products
+            .Where(product => !string.IsNullOrEmpty(product.ProductCategory))
+            .Select(product => product.ProductCategory!)
+            .Distinct()
+            .OrderBy(category => category)
+            .ToList();
+    }
+    
+    public AnalyticsService GetAnalyticsService()
+    {
+        return _analyticsService;
     }
 }
