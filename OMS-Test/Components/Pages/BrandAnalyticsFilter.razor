@@ -1,0 +1,104 @@
+@using BlazorBootstrap
+@using DTOs
+
+<div class="card mb-3">
+    <div class="card-header bg-light">
+        <small class="mb-0">Filter Options</small>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 70px;">Period 1:</strong>
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <small class="me-2">From:</small>
+                        <DateInput TValue="DateOnly" @bind-Value="@FromDate1" Placeholder="From Date" class="form-control-sm me-2" />
+                        <small class="mx-2">To:</small>
+                        <DateInput TValue="DateOnly" @bind-Value="@ToDate1" Placeholder="To Date" class="form-control-sm" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <strong class="me-3" style="min-width: 70px;">Period 2:</strong>
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <small class="me-2">From:</small>
+                        <DateInput TValue="DateOnly" @bind-Value="@FromDate2" Placeholder="From Date" class="form-control-sm me-2" />
+                        <small class="mx-2">To:</small>
+                        <DateInput TValue="DateOnly" @bind-Value="@ToDate2" Placeholder="To Date" class="form-control-sm" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-5">
+                <strong class="form-label">Brand:</strong>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                    <input type="text" class="form-control" @bind="SelectedBrand" @bind:event="oninput" 
+                        placeholder="Enter brand name or leave empty for all brands" list="brandSuggestions" />
+                    <datalist id="brandSuggestions">
+                        @foreach (var brand in Brands.Take(4))
+                        {
+                            <option value="@brand">@brand</option>
+                        }
+                    </datalist>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <strong class="form-label">Category:</strong>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-collection"></i></span>
+                    <input type="text" class="form-control" @bind="SelectedCategory" @bind:event="oninput"
+                        placeholder="Enter category name or leave empty for all categories" list="categorySuggestions" />
+                    <datalist id="categorySuggestions">
+                        @foreach (var category in Categories.Take(4))
+                        {
+                            <option value="@category">@category</option>
+                        }
+                    </datalist>
+                </div>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100" @onclick="ApplyFilters">
+                    <i class="bi bi-search me-1"></i> Apply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public DateOnly FromDate1 { get; set; }
+    
+    [Parameter]
+    public DateOnly ToDate1 { get; set; }
+    
+    [Parameter]
+    public DateOnly FromDate2 { get; set; }
+    
+    [Parameter]
+    public DateOnly ToDate2 { get; set; }
+    
+    [Parameter]
+    public string SelectedBrand { get; set; } = "";
+    
+    [Parameter]
+    public string SelectedCategory { get; set; } = "";
+    
+    [Parameter]
+    public List<string> Brands { get; set; } = new();
+    
+    [Parameter]
+    public List<string> Categories { get; set; } = new();
+    
+    [Parameter]
+    public EventCallback OnApplyFilters { get; set; }
+    
+    private async Task ApplyFilters()
+    {
+        await OnApplyFilters.InvokeAsync();
+    }
+}

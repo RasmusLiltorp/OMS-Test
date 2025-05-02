@@ -8,9 +8,9 @@
     <div class="card-body">
         @if (HasData)
         {
-            <div class="product-chart-container">
-                <h5 class="mb-3 text-center">Sales Trends</h5>
-                <div class="container-fluid overflow-x-auto">
+            <div class="product-chart-container text-center">
+                <h5 class="mb-3">Sales Trends</h5>
+                <div class="d-flex justify-content-center">
                     <LineChart @ref="lineChart" Width="800" Height="400" />
                 </div>
             </div>
@@ -32,7 +32,7 @@
     public bool HasData { get; set; } = false;
     
     [Parameter]
-    public string IntervalType { get; set; } = "Weekly"; 
+    public string IntervalType { get; set; } = "Weekly";
     
     [Parameter]
     public List<DateTime> DateLabels { get; set; } = new();
@@ -41,92 +41,37 @@
     private LineChartOptions lineChartOptions = default!;
     private ChartData chartData = default!;
     
-    private int datasetsCount;
-    private int labelsCount;
-    
     private string _previousIntervalType = "";
-    private DateTime? _previousFirstDate;
     private int _previousDataCount = 0;
     private int _previousDataSum = 0;
+    private DateTime? _previousStartDate = null;
     
-    private List<string> FormattedLabels => FormatLabels();
-    
-    private List<string> FormatLabels()
-    {
-        if (IntervalType.Equals("Monthly", StringComparison.OrdinalIgnoreCase))
-        {
-            if (DateLabels.Count > 0)
-            {
-                var firstDate = DateLabels.OrderBy(d => d).FirstOrDefault();
-                var month = firstDate.Month;
-                var year = firstDate.Year;
-                
-                var daysInMonth = DateTime.DaysInMonth(year, month);
-                var allDaysInMonth = new List<string>();
-                
-                for (int day = 1; day <= daysInMonth; day++)
-                {
-                    var date = new DateTime(year, month, day);
-                    allDaysInMonth.Add(date.ToString("MMM dd"));
-                }
-                
-                return allDaysInMonth;
-            }
-        }
-        else if (IntervalType.Equals("Weekly", StringComparison.OrdinalIgnoreCase))
-        {
-            if (DateLabels.Count > 0)
-            {
-                var orderedDates = DateLabels.OrderBy(d => d).ToList();
-                var firstDate = orderedDates.FirstOrDefault();
-                
-              
-                int daysToSubtract = firstDate.DayOfWeek == DayOfWeek.Sunday ? 6 : ((int)firstDate.DayOfWeek - 1);
-                
-                var startOfWeek = firstDate.Date.AddDays(-daysToSubtract);
-                
-                var allDaysInWeek = new List<string>();
-                
-                for (int dayOffset = 0; dayOffset < 7; dayOffset++)
-                {
-                    var date = startOfWeek.AddDays(dayOffset);
-                    allDaysInWeek.Add(date.ToString("ddd, MMM dd"));
-                }
-                
-                return allDaysInWeek;
-            }
-        }
-        
-        return Labels;
-    }
-    
+    /// <summary>
+    // This component displays a line chart of product sales data, 
+    // efficiently updating only when values change by tracking the
+    // interval type, label count, data sum, and start date to avoid unnecessary renders.
+    /// </summary>
     protected override void OnParametersSet()
     {
         if (HasData && Labels.Count > 0)
         {
-            DateTime? currentFirstDate = DateLabels.Count > 0 ? 
+            DateTime? currentStartDate = DateLabels.Count > 0 ? 
                 DateLabels.OrderBy(d => d).FirstOrDefault() : null;
                 
             int currentDataSum = UnitsSoldData.Sum();
-            bool hasChanges = false;
-            
-            if (_previousIntervalType != IntervalType || 
-                _previousDataCount != UnitsSoldData.Count ||
-                _previousDataSum != currentDataSum ||
-                (currentFirstDate != null && _previousFirstDate != currentFirstDate))
-            {
-                hasChanges = true;
-                
-                _previousIntervalType = IntervalType;
-                _previousFirstDate = currentFirstDate;
-                _previousDataCount = UnitsSoldData.Count;
-                _previousDataSum = currentDataSum;
-            }
+            bool hasChanges = _previousIntervalType != IntervalType || 
+                             _previousDataCount != Labels.Count ||
+                             _previousDataSum != currentDataSum ||
+                             (_previousStartDate != currentStartDate);
             
             if (hasChanges)
             {
-                UpdateChartData();
+                _previousIntervalType = IntervalType;
+                _previousDataCount = Labels.Count;
+                _previousDataSum = currentDataSum;
+                _previousStartDate = currentStartDate;
                 
+                UpdateChartData();
                 _chartNeedsUpdate = true;
             }
         }
@@ -147,6 +92,9 @@
         _chartNeedsUpdate = true;
     }
     
+    /// <summary>
+    /// Adds datasets to the chart data for product sales.
+    /// </summary>
     private void AddProductDatasets()
     {
         if (!HasData || Labels.Count == 0) return;
@@ -168,11 +116,14 @@
         chartData.Datasets = datasets;
     }
     
+    /// <summary>
+    /// Updates the chart data with the current labels and datasets.
+    /// </summary>
     private void UpdateChartData()
     {
         chartData = new ChartData 
         { 
-            Labels = FormattedLabels,
+            Labels = Labels,
             Datasets = new List<IChartDataset>() 
         };
         
@@ -181,6 +132,10 @@
     
     private bool _chartNeedsUpdate = false;
     
+    /// <summary>
+    /// This method is called after the component has rendered.
+    /// It initializes or updates the chart based on the current data.
+    /// </summary>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (lineChart != null)
