@@ -9,59 +9,116 @@ namespace OMS_Services;
 /// </summary>
 class PIMApiService
 {
-    private readonly HttpClient _http = new();
-    // private readonly JsonSerializerOptions _jsonOptions = new();
+    private readonly HttpClient _http;
+    private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+    private readonly string _baseUrl = "http://localhost:8080";
 
-    // Temporary mock data
-    public Task<List<ProductDTO?>> GetAllProductsAsync() =>
-        Task.FromResult(new List<ProductDTO?>
-        {
-            new() { ProductID="product-1", ProductName="test", Price=123, Weight=1.53m, BrandName="brand1", ProductCategory="cat1" },
-            new() { ProductID="product-2", ProductName="test2", Price=1234, Weight=1.234m, BrandName="brand2", ProductCategory="cat2" },
-            new() { ProductID="product-3", ProductName="test3", Price=1235, Weight=1.235m, BrandName="brand3", ProductCategory="cat1" }
-        });
-}
+    public PIMApiService()
+    {
+        _http = new HttpClient();
+        _http.BaseAddress = new Uri(_baseUrl);
+    }
 
-/*
-     public async Task<ProductDTO?> GetProductAsync(string productId)
+    /// <summary>
+    /// Gets a detailed product by its ID
+    /// </summary>
+    public async Task<ProductDetailDTO?> GetProductDetailAsync(string productId)
     {
         try
         {
-            var response = await _http.GetFromJsonAsync<ProductDTO>($"api/products/{productId}");
-            if (response == null)
+            var response = await _http.GetAsync($"api/products/{productId}");
+            
+            if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error fetching product {productId}.");
+                Console.WriteLine($"Error fetching product {productId}: {response.StatusCode}");
                 return null;
-         
             }
-            return new ProductDTO
-            {
-                ProductID = response.ProductID,
-                ProductName = response.ProductName,
-                Price = response.Price,
-                Weight = 10 // Example weight
-            };
+
+            var content = await response.Content.ReadAsStringAsync();
+            var productDetail = JsonSerializer.Deserialize<ProductDetailDTO>(content, _jsonOptions);
+            
+            return productDetail;
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine($"Error fetching product {productId}.");
+            Console.WriteLine($"Exception when fetching product {productId}: {ex.Message}");
             return null;
         }
-
     }
 
-    public async Task<List<ProductDTO?>> GetAllProductsAsync()
+    /// <summary>
+    /// Gets a paginated list of all products with complete information.
+    /// </summary>
+    public async Task<List<ProductDTO>> GetAllProductsAsync(int page = 1, int pageSize = 50)
     {
         try
         {
-            int page = 10;
-            var response = await _http.GetFromJsonAsync<List<ProductDTO>>($"api//products/list/{page}");
-            return response;
+            // Get basic list of products
+            var response = await _http.GetAsync($"api/products/list?page={page}&page-size={pageSize}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Error fetching products: {response.StatusCode}");
+                return new List<ProductDTO>();
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var productList = JsonSerializer.Deserialize<ProductListDTO>(content, _jsonOptions);
+
+            if (productList == null || productList.Items == null || !productList.Items.Any())
+            {
+                return new List<ProductDTO>();
+            }
+
+            List<ProductDTO> result = new List<ProductDTO>();
+            
+            foreach (var item in productList.Items)
+            {
+                var detailedProduct = await GetProductDetailAsync(item.ProductId);
+                
+                if (detailedProduct != null)
+                {
+                    // Extract brand from attributes if it exists
+                    string brandName = string.Empty;
+                    if (detailedProduct.Attributes != null && 
+                        detailedProduct.Attributes.TryGetValue("brand", out string? brand))
+                    {
+                        brandName = brand;
+                    }
+                    
+                    result.Add(new ProductDTO
+                    {
+                        ProductID = detailedProduct.ProductId,
+                        ProductName = detailedProduct.Name,
+                        Price = detailedProduct.Price,
+                        BrandName = brandName,
+                        ProductCategory = detailedProduct.Category,
+                        Weight = 0 
+                    });
+                }
+                else
+                {
+                    result.Add(new ProductDTO
+                    {
+                        ProductID = item.ProductId,
+                        ProductName = item.Name,
+                        Price = 0,
+                        BrandName = string.Empty,
+                        ProductCategory = string.Empty,
+                        Weight = 0
+                    });
+                }
+            }
+
+            return result;
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine("Error fetching all products.");
-            return new();
+            Console.WriteLine($"Exception when fetching products: {ex.Message}");
+            return new List<ProductDTO>();
         }
     }
-    */
+}
