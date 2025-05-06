@@ -95,10 +95,21 @@
     public List<string> Categories { get; set; } = new();
     
     [Parameter]
-    public EventCallback OnApplyFilters { get; set; }
+    public EventCallback<object> OnApplyFilters { get; set; }
+
     
     private async Task ApplyFilters()
     {
-        await OnApplyFilters.InvokeAsync();
+        var filterData = new 
+        { 
+            Brand = SelectedBrand, 
+            Category = SelectedCategory,
+            FromDate1 = FromDate1,
+            ToDate1 = ToDate1,
+            FromDate2 = FromDate2,
+            ToDate2 = ToDate2
+        };
+        
+        await OnApplyFilters.InvokeAsync(filterData);
     }
 }

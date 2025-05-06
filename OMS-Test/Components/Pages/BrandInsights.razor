@@ -41,7 +41,7 @@
             SelectedCategory="@selectedCategory"
             Brands="@allBrands"
             Categories="@allCategories"
-            OnApplyFilters="CompareAnalytics" />
+            OnApplyFilters="HandleFiltersApplied" />
             
         <BrandComparisonTable BrandComparison="@brandComparison" />
         
@@ -58,8 +58,8 @@
     private DateOnly toDate1 = new(2025, 4, 15);
     private DateOnly fromDate2 = new(2025, 4, 16);
     private DateOnly toDate2 = new(2025, 4, 30);
-    private string selectedBrand { get; set; } = "";
-    private string selectedCategory { get; set; } = "";
+    private string selectedBrand = "";
+    private string selectedCategory  = "";
     private string activeView { get; set; } = "brands";
     private string selectedProduct = "";
 
@@ -235,5 +235,18 @@
         allCategories = DataService.GetAllCategories();
         allProducts = DataService.Products;
         StateHasChanged();
+    }
+
+    private void HandleFiltersApplied(object filterData)
+    {
+        dynamic filters = filterData;
+        selectedBrand = filters.Brand;
+        selectedCategory = filters.Category;
+        fromDate1 = filters.FromDate1;
+        toDate1 = filters.ToDate1;
+        fromDate2 = filters.FromDate2;
+        toDate2 = filters.ToDate2;
+        
+        CompareAnalytics();
     }
 }
