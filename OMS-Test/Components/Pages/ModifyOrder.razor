@@ -205,7 +205,7 @@
         }
     }
 
-    private void CancelOrder()
+    private async Task CancelOrder()
     {
         await DataService.InitializeDataAsync();
         NavigationManager.NavigateTo("/OMS/Manage", forceLoad: true);
