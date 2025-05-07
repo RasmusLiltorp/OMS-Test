@@ -114,11 +114,19 @@
     {
         order = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
 
+        order = DataService.GetOrderById(OrderId);
+
         if (order != null)
         {
-            isOrderShipped = await ApiService.IsOrderFulfilledAsync(order.OrderId);
-            StateHasChanged();
+            // Check fulfillment from the local DTO, no API call
+            isOrderShipped = DataService.IsOrderFulfilled(order.OrderId);
         }
-    }
+        else
+        {
+            Console.WriteLine($"Warning: Order {OrderId} not found in DataService.");
+        }
 
+        await InvokeAsync(StateHasChanged);
+
+    }
 }

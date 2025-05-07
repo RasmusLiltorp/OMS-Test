@@ -240,35 +240,6 @@ public class ApiService
             };
         }
     }
-
-
-    public async Task<bool> IsOrderFulfilledAsync(string orderId)
-    {
-        try
-        {
-            var response = await _http.GetAsync($"api/order/{orderId}/shipping-status");
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(json);
-
-            if (doc.RootElement.TryGetProperty("is-shipped", out JsonElement shippedElement))
-            {
-                return shippedElement.GetBoolean();
-            }
-
-            Console.WriteLine($"Warning: 'is-shipped' property not found in response for order {orderId}.");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error checking fulfillment for order {orderId}: {ex.Message}");
-            return false;
-        }
-    }
-
-
-
 }
 
 /// <summary>

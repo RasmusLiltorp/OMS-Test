@@ -180,4 +180,22 @@ public class DataService
     {
         return _analyticsService;
     }
+
+    public OrderDTO? GetOrderById(string orderId)
+    {
+        return OrderLines.FirstOrDefault(o => o.OrderId == orderId);
+    }
+
+    // Check if order is fulfilled based on FulfillmentState (1 = not shipped, 2 = shipped)
+    public bool IsOrderFulfilled(string orderId)
+    {
+        var order = GetOrderById(orderId);
+        if (order == null)
+        {
+            Console.WriteLine($"Warning: Order {orderId} not found in cached orders.");
+            return false;
+        }
+
+        return order.FulfillmentState == 2;
+    }
 }
