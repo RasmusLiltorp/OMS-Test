@@ -5,12 +5,14 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 @using DTOs
+@inject ApiService ApiService
+
 
 <PageTitle>Order Details</PageTitle>
 
 <div class="topnav">
-  <a href="./OMS/Manage">OMS</a>
-  <a href="../OMS/SalesReportsOverview">Sales Reports</a>
+    <a href="./OMS/Manage">OMS</a>
+    <a href="../OMS/SalesReportsOverview">Sales Reports</a>
 </div>
 
 <div class="container mt-4">
@@ -38,6 +40,13 @@
                     {
                         <p><strong>Track:</strong> N/A</p>
                     }
+
+                    <p>
+                        <strong>Shipment Status:</strong>
+                        @(isOrderShipped ? "Shipped" : "Not Shipped")
+                    </p>
+
+
                 </div>
             }
             else
@@ -71,9 +80,10 @@
                                     <td>@(product?.ProductName ?? "Unknown")</td>
                                     <td>@lineElement.Amount</td>
                                     <td>@(lineElement?.Price.ToString("0.00") ?? "0.00") DKK</td>
-                                    <td>@((Convert.ToDecimal(lineElement?.Price) * Convert.ToDecimal(lineElement?.Amount)).ToString("0.00")) DKK</td>
-                                </tr>
-                            }
+                                    <td>@((Convert.ToDecimal(lineElement?.Price) *
+                                                                        Convert.ToDecimal(lineElement?.Amount)).ToString("0.00")) DKK</td>
+                        </tr>
+                                                }
                             <tr class="table">
                                 <td colspan="4" class="text-end"><strong>Order Total:</strong></td>
                                 <td><strong>@(DataService.CalculateOrdertotal(order).ToString("0.00")) DKK</strong></td>
@@ -92,15 +102,22 @@
 
 @code {
 
-    public string TrackingPlaceholder ="123456789";
+    public string TrackingPlaceholder = "123456789";
+    private bool isOrderShipped = false;
 
     [Parameter]
     public string? OrderId { get; set; }
 
     private OrderDTO? order;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         order = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
+
+        if (order != null)
+        {
+            isOrderShipped = await ApiService.IsOrderFulfilledAsync(order.OrderId);
+        }
     }
+
 }

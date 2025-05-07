@@ -209,6 +209,57 @@ public class ApiService
             };
         }
     }
+
+    public async Task<RootDTO?> FulfillOrderAsync(string orderId)
+    {
+        try
+        {
+            var response = await _http.PatchAsync($"api/order/{orderId}/fulfillment", null);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(json);
+
+            string status = doc.RootElement.GetProperty("status").GetString() ?? "Error";
+
+            return new RootDTO { Status = status };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fulfilling order {orderId}: {ex.Message}");
+            return new RootDTO
+            {
+                Status = "Exception",
+                Data = new()
+            };
+        }
+    }
+
+    public async Task<bool> IsOrderFulfilledAsync(string orderId)
+    {
+        try
+        {
+            var response = await _http.GetAsync($"api/order/{orderId}/fulfillment");
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(json);
+
+            if (doc.RootElement.TryGetProperty("fulfilled", out JsonElement fulfilledElement))
+            {
+                return fulfilledElement.GetBoolean();
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking fulfillment for order {orderId}: {ex.Message}");
+            return false;
+        }
+    }
+
+
 }
 
 /// <summary>
@@ -245,3 +296,4 @@ public class KebabCaseNamingPolicy : JsonNamingPolicy
         return builder.ToString();
     }
 }
+
