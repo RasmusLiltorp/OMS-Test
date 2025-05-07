@@ -32,7 +32,9 @@
                     {
                         <p>
                             <strong>Track:</strong>
-                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=123456789" target="_blank">
+                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=@TrackingPlaceholder"
+                                target="_blank">
+                                @TrackingPlaceholder
                             </a>
                         </p>
                     }
@@ -40,6 +42,7 @@
                     {
                         <p><strong>Track:</strong> N/A</p>
                     }
+
 
                     <p>
                         <strong>Shipment Status:</strong>
@@ -119,6 +122,8 @@
         if (order != null)
         {
             isOrderShipped = DataService.IsOrderFulfilled(order.OrderId);
+
+            TrackingPlaceholder = order.ShippingInfo?.TrackingNumber ?? string.Empty;
         }
         else
         {
