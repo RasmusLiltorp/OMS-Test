@@ -214,7 +214,7 @@ public class ApiService
     {
         try
         {
-            var response = await _http.PatchAsync($"api/order/{orderId}/fulfillment", null);
+            var response = await _http.PatchAsync($"api/order/{orderId}/shipping-status", null);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -239,7 +239,7 @@ public class ApiService
     {
         try
         {
-            var response = await _http.GetAsync($"api/order/{orderId}/fulfillment");
+            var response = await _http.GetAsync($"api/order/{orderId}/shipping-status");
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
