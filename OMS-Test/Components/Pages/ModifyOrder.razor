@@ -73,7 +73,7 @@
 
 
         <div class="form-check mb-3">
-            <InputCheckbox class="form-check-input" @bind-Value="isShipped" @onchange="OnShippedChanged" />
+            <InputCheckbox class="form-check-input" @bind-Value="isShipped" />
             <label class="form-check-label">Order Shipped</label>
         </div>
 
@@ -181,6 +181,9 @@
             (selectedOrder.ShippingInfo ??= new ShippingInfoDTO())
             .TrackingNumber = trackingNumberValue;
 
+        // Apply shipped status if needed (convert bool to fulfillment state)
+        selectedOrder.FulfillmentState = isShipped ? 2 : 1;
+
         showConfirmation = false;
         errorMessage = "";
 
@@ -205,6 +208,7 @@
         }
     }
 
+
     private async Task CancelOrder()
     {
         await DataService.InitializeDataAsync();
@@ -220,7 +224,7 @@
 
         try
         {
-            var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId); 
+            var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId);
             if (response?.Status != "Success")
             {
                 errorMessage = "Failed to update fulfillment status.";

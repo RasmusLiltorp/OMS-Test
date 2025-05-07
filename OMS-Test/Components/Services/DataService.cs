@@ -124,7 +124,8 @@ public class DataService
                 },
                 lineElements = order.LineElements,
                 totalCost = order.TotalCost,
-                date = order.Date
+                date = order.Date,
+                fulfillmentState = order.FulfillmentState
             };
             
             var result = await _apiService.PatchOrderAsync(order.OrderId, patchData);
