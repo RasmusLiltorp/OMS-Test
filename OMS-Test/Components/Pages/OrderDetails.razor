@@ -32,7 +32,7 @@
                     {
                         <p>
                             <strong>Track:</strong>
-                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=123124141414" target="_blank">
+                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=123456789" target="_blank">
                             </a>
                         </p>
                     }
@@ -118,7 +118,6 @@
 
         if (order != null)
         {
-            // Check fulfillment from the local DTO, no API call
             isOrderShipped = DataService.IsOrderFulfilled(order.OrderId);
         }
         else
