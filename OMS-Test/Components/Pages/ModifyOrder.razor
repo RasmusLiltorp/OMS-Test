@@ -207,7 +207,8 @@
 
     private void CancelOrder()
     {
-        NavigationManager.NavigateTo("/OMS/Manage");
+        await DataService.InitializeDataAsync();
+        NavigationManager.NavigateTo("/OMS/Manage", forceLoad: true);
     }
 
     private async Task OnShippedChanged(ChangeEventArgs e)
@@ -219,7 +220,7 @@
 
         try
         {
-            var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId); // Call API
+            var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId); 
             if (response?.Status != "Success")
             {
                 errorMessage = "Failed to update fulfillment status.";
