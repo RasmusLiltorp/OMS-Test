@@ -214,13 +214,19 @@ public class ApiService
     {
         try
         {
-            var response = await _http.PatchAsync($"api/order/{orderId}/shipping-status", null);
+            var content = new StringContent(
+                JsonSerializer.Serialize(new { isShipped = true }, _jsonOptions),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _http.PatchAsync($"api/order/{orderId}/shipping-status", content);
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(json);
 
-            string status = doc.RootElement.GetProperty("status").GetString() ?? "Error";
+            string status = doc.RootElement.GetProperty("status").GetString() ?? "Success";
 
             return new RootDTO { Status = status };
         }
@@ -235,6 +241,7 @@ public class ApiService
         }
     }
 
+
     public async Task<bool> IsOrderFulfilledAsync(string orderId)
     {
         try
@@ -245,11 +252,12 @@ public class ApiService
             var json = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(json);
 
-            if (doc.RootElement.TryGetProperty("fulfilled", out JsonElement fulfilledElement))
+            if (doc.RootElement.TryGetProperty("is-shipped", out JsonElement shippedElement))
             {
-                return fulfilledElement.GetBoolean();
+                return shippedElement.GetBoolean();
             }
 
+            Console.WriteLine($"Warning: 'is-shipped' property not found in response for order {orderId}.");
             return false;
         }
         catch (Exception ex)
@@ -258,6 +266,7 @@ public class ApiService
             return false;
         }
     }
+
 
 
 }
