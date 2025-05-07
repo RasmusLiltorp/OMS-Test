@@ -120,6 +120,9 @@
         selectedOrder = selected;
         showConfirmation = false;
         trackingNumberValue = string.Empty;
+
+        // Sync the checkbox: FulfillmentState 2 = shipped, 1 = not shipped
+        isShipped = selected.FulfillmentState == 2;
     }
 
     private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
@@ -215,25 +218,25 @@
         NavigationManager.NavigateTo("/OMS/Manage", forceLoad: true);
     }
 
-    private async Task OnShippedChanged(ChangeEventArgs e)
+    /*private async Task OnShippedChanged(ChangeEventArgs e)
     {
-        if (selectedOrder == null)
-            return;
+    if (selectedOrder == null)
+    return;
 
-        isShipped = (bool)e.Value!;
+    isShipped = (bool)e.Value!;
 
-        try
-        {
-            var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId);
-            if (response?.Status != "Success")
-            {
-                errorMessage = "Failed to update fulfillment status.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Error: {ex.Message}";
-        }
+    try
+    {
+    var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId);
+    if (response?.Status != "Success")
+    {
+    errorMessage = "Failed to update fulfillment status.";
     }
+    }
+    catch (Exception ex)
+    {
+    errorMessage = $"Error: {ex.Message}";
+    }
+    }*/
 
 }
