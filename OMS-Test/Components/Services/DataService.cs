@@ -17,6 +17,9 @@ public class DataService
     private readonly ApiService _apiService;
     private readonly PIMApiService _pimApiService;
     private readonly AnalyticsService _analyticsService;
+
+    public ApiService ApiService => _apiService;
+
     public List<ProductDTO> Products { get; private set; } = new();
     private readonly SemaphoreSlim _dataInitLock = new SemaphoreSlim(1, 1);
 
@@ -27,14 +30,14 @@ public class DataService
     public DataService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         var baseUrl = configuration["BackendSettings:BaseUrl"] ?? "http://localhost:4300/";
-        
+
         var httpClient = httpClientFactory.CreateClient();
         httpClient.BaseAddress = new Uri(baseUrl);
 
         _apiService = new ApiService(httpClient);
         _pimApiService = new PIMApiService();
         _analyticsService = new AnalyticsService(this);
-        
+
         // Initialize data
         _ = InitializeDataAsync();
     }
@@ -47,7 +50,7 @@ public class DataService
     {
         await _dataInitLock.WaitAsync();
         try
-        {        
+        {
             var ordersFromApi = await _apiService.GetMultipleOrdersAsync(100); // Fetch 100 orders - simplfied for MVP
             if (ordersFromApi != null)
             {
@@ -70,8 +73,8 @@ public class DataService
             else
             {
                 Products = new List<ProductDTO>();
-            } 
-        
+            }
+
         }
         finally
         {
@@ -86,14 +89,14 @@ public class DataService
         {
             return result;
         }
-        
-        foreach(var orderData in apiResponses.Data)
-        {            
+
+        foreach (var orderData in apiResponses.Data)
+        {
             var order = new OrderDTO
             {
                 OrderId = orderData.OrderId,
-                LineElements = orderData.LineElements != null ? 
-                    new List<LineElementDTO>(orderData.LineElements) : 
+                LineElements = orderData.LineElements != null ?
+                    new List<LineElementDTO>(orderData.LineElements) :
                     new List<LineElementDTO>(),
                 TotalCost = orderData.TotalCost,
                 Date = orderData.Date,
@@ -101,22 +104,26 @@ public class DataService
                 CustomerInfo = orderData.CustomerInfo,
                 ShippingInfo = orderData.ShippingInfo
             };
-            
+
             result.Add(order);
         }
-        
+
         return result;
     }
 
     public async Task<bool> UpdateOrderAsync(OrderDTO order)
     {
-        try {
-            var patchData = new {
-                customerInfo = new {
+        try
+        {
+            var patchData = new
+            {
+                customerInfo = new
+                {
                     name = order.CustomerInfo.Name,
                     customerId = order.CustomerInfo.CustomerId
                 },
-                shippingInfo = new {
+                shippingInfo = new
+                {
                     address1 = order.ShippingInfo.Address1,
                     address2 = order.ShippingInfo.Address2,
                     zipcodeId = order.ShippingInfo.ZipcodeId,
@@ -127,11 +134,12 @@ public class DataService
                 date = order.Date,
                 fulfillmentState = order.FulfillmentState
             };
-            
+
             var result = await _apiService.PatchOrderAsync(order.OrderId, patchData);
             return result?.Status == "Success";
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             Console.WriteLine($"Update order error: {ex.Message}");
             return false;
         }
@@ -176,7 +184,7 @@ public class DataService
             .OrderBy(category => category)
             .ToList();
     }
-    
+
     public AnalyticsService GetAnalyticsService()
     {
         return _analyticsService;

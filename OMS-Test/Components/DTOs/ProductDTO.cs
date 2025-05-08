@@ -12,6 +12,8 @@ public class ProductDTO
 
     public string? BrandName { get; set; }
     public string? ProductCategory  { get; set; }
+
+    public int Amount { get; set; }
     
     //Placeholder
     public decimal Weight { get; set; }

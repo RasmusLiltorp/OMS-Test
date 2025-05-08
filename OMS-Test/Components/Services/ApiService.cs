@@ -240,6 +240,54 @@ public class ApiService
             };
         }
     }
+
+    public async Task<int> GetProductStockAsync(string productId)
+    {
+        try
+        {
+            var response = await _http.GetAsync($"api/stock/{productId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var stockResponse = await response.Content.ReadFromJsonAsync<StockStatusResponseDTO>(_jsonOptions);
+                if (stockResponse != null)
+                {
+                    return stockResponse.Data;
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return 0; // product not found → 0 stock
+            }
+            else
+            {
+                Console.WriteLine($"Error fetching stock for {productId}: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception fetching stock for {productId}: {ex.Message}");
+        }
+
+        return 0; // fallback
+    }
+
+    public async Task<bool> AdjustProductStockAsync(string productId, int amount)
+    {
+        try
+        {
+            var response = await _http.PatchAsJsonAsync($"api/stock/{productId}", new { amount });
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to adjust stock for {productId}: {ex.Message}");
+            return false;
+        }
+    }
+
+
+
 }
 
 /// <summary>
