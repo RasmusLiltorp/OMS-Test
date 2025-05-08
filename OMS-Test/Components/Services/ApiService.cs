@@ -209,6 +209,37 @@ public class ApiService
             };
         }
     }
+
+    public async Task<RootDTO?> FulfillOrderAsync(string orderId)
+    {
+        try
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(new { isShipped = true }, _jsonOptions),
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _http.PatchAsync($"api/order/{orderId}/shipping-status", content);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(json);
+
+            string status = doc.RootElement.GetProperty("status").GetString() ?? "Success";
+
+            return new RootDTO { Status = status };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fulfilling order {orderId}: {ex.Message}");
+            return new RootDTO
+            {
+                Status = "Exception",
+                Data = new()
+            };
+        }
+    }
 }
 
 /// <summary>
@@ -245,3 +276,4 @@ public class KebabCaseNamingPolicy : JsonNamingPolicy
         return builder.ToString();
     }
 }
+

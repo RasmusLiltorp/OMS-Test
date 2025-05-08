@@ -124,7 +124,8 @@ public class DataService
                 },
                 lineElements = order.LineElements,
                 totalCost = order.TotalCost,
-                date = order.Date
+                date = order.Date,
+                fulfillmentState = order.FulfillmentState
             };
             
             var result = await _apiService.PatchOrderAsync(order.OrderId, patchData);
@@ -179,5 +180,23 @@ public class DataService
     public AnalyticsService GetAnalyticsService()
     {
         return _analyticsService;
+    }
+
+    public OrderDTO? GetOrderById(string orderId)
+    {
+        return OrderLines.FirstOrDefault(o => o.OrderId == orderId);
+    }
+
+    // Check if order is fulfilled based on FulfillmentState (1 = not shipped, 2 = shipped)
+    public bool IsOrderFulfilled(string orderId)
+    {
+        var order = GetOrderById(orderId);
+        if (order == null)
+        {
+            Console.WriteLine($"Warning: Order {orderId} not found in cached orders.");
+            return false;
+        }
+
+        return order.FulfillmentState == 2;
     }
 }
