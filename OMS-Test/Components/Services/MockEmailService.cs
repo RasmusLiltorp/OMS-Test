@@ -16,12 +16,6 @@ namespace OMS_Services
 
         public async Task SendOrderReceiptAsync(OrderDTO order)
         {
-            /*if (order.CustomerInfo.Email == null)
-            {
-                Console.WriteLine("No customer email provided.");
-                return;
-            }*/
-            
             var sb = new StringBuilder();
             var total = _dataService.CalculateOrdertotal(order);
 

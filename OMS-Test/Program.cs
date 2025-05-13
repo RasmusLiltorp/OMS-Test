@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-//add dataservice
+// add dataservice
 builder.Services.AddScoped<DataService>();
 
 // Add circuit options configuration

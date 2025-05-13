@@ -3,8 +3,8 @@ namespace DTOs
     
 public class CategoryAnalyticsDTO
 {
-    public string CategoryName { get; set; }
-    public int TotalUnitsSold { get; set; }
-    public decimal TotalRevenue { get; set; }
+    public required string CategoryName { get; set; }
+    public required int TotalUnitsSold { get; set; }
+    public required decimal TotalRevenue { get; set; }
 }
 }

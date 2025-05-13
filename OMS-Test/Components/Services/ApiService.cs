@@ -285,9 +285,6 @@ public class ApiService
             return false;
         }
     }
-
-
-
 }
 
 /// <summary>
@@ -320,8 +317,6 @@ public class KebabCaseNamingPolicy : JsonNamingPolicy
                 builder.Append(char.ToLowerInvariant(c));
             }
         }
-
         return builder.ToString();
     }
 }
-

@@ -5,8 +5,6 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 @using DTOs
-@inject ApiService ApiService
-
 
 <PageTitle>Order Details</PageTitle>
 
@@ -43,14 +41,11 @@
                     {
                         <p><strong>Track:</strong> N/A</p>
                     }
-
-
+                    
                     <p>
                         <strong>Shipment Status:</strong>
                         @(isOrderShipped ? "Shipped" : "Not Shipped")
                     </p>
-
-
                 </div>
             }
             else
@@ -118,17 +113,20 @@
     {
         order = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
 
-        order = DataService.GetOrderById(OrderId);
-
-        if (order != null)
+        if (OrderId != null)
         {
-            isOrderShipped = DataService.IsOrderFulfilled(order.OrderId);
+            order = DataService.GetOrderById(OrderId);
 
-            TrackingPlaceholder = order.ShippingInfo?.TrackingNumber ?? string.Empty;
-        }
-        else
-        {
-            Console.WriteLine($"Warning: Order {OrderId} not found in DataService.");
+            if (order != null)
+            {
+                isOrderShipped = DataService.IsOrderFulfilled(order.OrderId);
+
+                TrackingPlaceholder = order.ShippingInfo?.TrackingNumber ?? string.Empty;
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Order {OrderId} not found in DataService.");
+            }
         }
 
         await InvokeAsync(StateHasChanged);

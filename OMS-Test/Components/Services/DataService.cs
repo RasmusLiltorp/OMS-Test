@@ -18,7 +18,8 @@ public class DataService
     private readonly PIMApiService _pimApiService;
     private readonly AnalyticsService _analyticsService;
 
-    public ApiService ApiService => _apiService;
+    public ApiService ApiService => _apiService; 
+    public AnalyticsService Analytics => _analyticsService;
 
     public List<ProductDTO> Products { get; private set; } = new();
     private readonly SemaphoreSlim _dataInitLock = new SemaphoreSlim(1, 1);
@@ -42,10 +43,6 @@ public class DataService
         _ = InitializeDataAsync();
     }
 
-    // expose analytics service
-    public AnalyticsService Analytics => _analyticsService;
-
-
     public async Task InitializeDataAsync()
     {
         await _dataInitLock.WaitAsync();
@@ -60,7 +57,8 @@ public class DataService
             {
                 Console.WriteLine("No orders found or error occurred while fetching orders.");
             }
-            // Initilize all products
+            
+            // Initialize all products
             var productsResult = await _pimApiService.GetAllProductsAsync();
             if (productsResult != null)
             {
@@ -74,7 +72,6 @@ public class DataService
             {
                 Products = new List<ProductDTO>();
             }
-
         }
         finally
         {
@@ -104,10 +101,8 @@ public class DataService
                 CustomerInfo = orderData.CustomerInfo,
                 ShippingInfo = orderData.ShippingInfo
             };
-
             result.Add(order);
         }
-
         return result;
     }
 
@@ -134,7 +129,7 @@ public class DataService
                 date = order.Date,
                 fulfillmentState = order.FulfillmentState
             };
-
+            
             var result = await _apiService.PatchOrderAsync(order.OrderId, patchData);
             return result?.Status == "Success";
         }
@@ -144,13 +139,7 @@ public class DataService
             return false;
         }
     }
-
-    public void SaveNewUniqueProduct(ProductDTO product)
-    {
-    }
-    public void ProductFromOrder()
-    {
-    }
+    
     public decimal CalculateOrdertotal(OrderDTO order)
     {
         decimal total = 0;
@@ -160,11 +149,7 @@ public class DataService
         }
         return total;
     }
-    public decimal CalculateWeight()
-    {
-        return 0;
-    }
-
+    
     public List<string> GetAllBrands()
     {
         return Products
@@ -184,12 +169,7 @@ public class DataService
             .OrderBy(category => category)
             .ToList();
     }
-
-    public AnalyticsService GetAnalyticsService()
-    {
-        return _analyticsService;
-    }
-
+    
     public OrderDTO? GetOrderById(string orderId)
     {
         return OrderLines.FirstOrDefault(o => o.OrderId == orderId);

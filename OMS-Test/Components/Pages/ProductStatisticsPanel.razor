@@ -47,9 +47,9 @@
     private DateTime? _previousStartDate = null;
     
     /// <summary>
-    // This component displays a line chart of product sales data, 
-    // efficiently updating only when values change by tracking the
-    // interval type, label count, data sum, and start date to avoid unnecessary renders.
+    /// This component displays a line chart of product sales data, 
+    /// efficiently updating only when values change by tracking the
+    /// interval type, label count, data sum, and start date to avoid unnecessary renders.
     /// </summary>
     protected override void OnParametersSet()
     {
@@ -157,7 +157,6 @@
                 Console.WriteLine($"Error with chart: {ex.Message}");
             }
         }
-        
         await base.OnAfterRenderAsync(firstRender);
     }
 }
