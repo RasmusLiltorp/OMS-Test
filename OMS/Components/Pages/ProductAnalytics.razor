@@ -1,0 +1,391 @@
+@using BlazorBootstrap
+@using DTOs
+@using OMS_Services
+@inject DataService DataService
+
+<div class="card mb-3">
+    <div class="card-header bg-light">
+        <small class="mb-0">Product Sales Analysis</small>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-box"></i></span>
+                    <input type="text" class="form-control" @bind="SelectedProduct" @bind:event="oninput" 
+                        placeholder="Enter product name" list="productSuggestions" />
+                    <datalist id="productSuggestions">
+                        @foreach (var product in Products.Take(10))
+                        {
+                            <option value="@product.ProductID">@product.ProductName</option>
+                        }
+                    </datalist>
+                    <button class="btn btn-primary" @onclick="LoadProductSalesData">
+                        <i class="bi bi-search me-1"></i> View Sales
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end align-items-center">
+                <div class="btn-group me-2" role="group">
+                    <button type="button" class="btn btn-sm @(CurrentTimeRange.RangeType == "week" ? "btn-primary" : "btn-outline-primary")" @onclick="SwitchToWeekView">
+                        Weekly
+                    </button>
+                    <button type="button" class="btn btn-sm @(CurrentTimeRange.RangeType == "month" ? "btn-primary" : "btn-outline-primary")" @onclick="SwitchToMonthView">
+                        Monthly
+                    </button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="NavigateToPreviousPeriod">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        @GetTimeRangeDisplay()
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="NavigateToNextPeriod">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (IsProductDataLoaded && !string.IsNullOrEmpty(SelectedProduct))
+        {
+            <ProductStatisticsPanel 
+                ProductName="@SelectedProductName"
+                Labels="@FormattedLabels"
+                UnitsSoldData="@FormattedUnitsSoldData"
+                HasData="@(FormattedLabels.Count > 0)"
+                DateLabels="@ChartData.DateLabels"
+                IntervalType="@(CurrentTimeRange.RangeType == "week" ? "Weekly" : "Monthly")" />
+        }
+        else if (string.IsNullOrEmpty(SelectedProduct))
+        {
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Select a Product</h5>
+                <p class="mb-0">Enter a product name above to view sales statistics.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@if (IsProductDataLoaded && !string.IsNullOrEmpty(SelectedProduct) && ProductSalesData.Count > 0)
+{
+    <div class="card mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <small class="mb-0">Detailed Sales Data</small>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Units Sold</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var period in ProductSalesData.OrderByDescending(d => d.Date).Take(10))
+                        {
+                            <tr>
+                                <td>@period.Date.ToString("MMM dd, yyyy")</td>
+                                <td>@period.UnitsSold</td>
+                                <td>@period.Revenue.ToString("C")</td>
+                            </tr>
+                        }
+                        @if (ProductSalesData.Count > 10)
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    <em>Showing the most recent 10 of @ProductSalesData.Count records.</em>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public List<ProductDTO> Products { get; set; } = new();
+
+    [Parameter]
+    public string SelectedProduct { get; set; } = "";
+    
+    private string selectedProductId = "";
+    private string SelectedProductName = "";
+    private bool IsProductDataLoaded = false;
+    private List<ProductSalesDataDTO> ProductSalesData = new();
+    private ProductSalesChartDTO ChartData = new();
+    private ProductTimeRangeDTO CurrentTimeRange = new();
+    
+    private List<string> FormattedLabels { get; set; } = new();
+    private List<int> FormattedUnitsSoldData { get; set; } = new();
+    
+    protected override void OnInitialized()
+    {
+        var today = DateTime.Today;
+        int daysToSubtract = today.DayOfWeek == DayOfWeek.Sunday ? 6 : ((int)today.DayOfWeek - 1);
+        
+        var startOfWeek = today.AddDays(-daysToSubtract);
+        var endOfWeek = startOfWeek.AddDays(6);
+        
+        CurrentTimeRange = new ProductTimeRangeDTO
+        {
+            StartDate = startOfWeek,
+            EndDate = endOfWeek,
+            RangeType = "week"
+        };
+    }
+    
+    /// <summary>
+    // / Loads the product sales data based on the selected product and time range.
+    // / It fetches the data from the DataService and prepares it for display.
+    /// </summary>
+    public void LoadProductSalesData()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(SelectedProduct))
+                return;
+                
+            IsProductDataLoaded = false;
+            StateHasChanged();
+            
+            selectedProductId = SelectedProduct;
+            var product = DataService.Products.FirstOrDefault(p => p.ProductID == selectedProductId);
+            SelectedProductName = product?.ProductName ?? "Unknown Product";
+            
+            ProductSalesData = DataService.Analytics.GetProductSalesData(
+                selectedProductId,
+                CurrentTimeRange.StartDate,
+                CurrentTimeRange.EndDate);
+                
+            ChartData = DataService.Analytics.GetProductChartData(
+                selectedProductId,
+                CurrentTimeRange.StartDate,
+                CurrentTimeRange.EndDate,
+                CurrentTimeRange.RangeType);
+                
+            if (ChartData.Labels.Count == 0)
+            {
+                ChartData.Labels.Add($"{CurrentTimeRange.StartDate:MMM dd}");
+                ChartData.UnitsSoldData.Add(0);
+                ChartData.RevenueData.Add(0);
+                ChartData.DateLabels.Add(CurrentTimeRange.StartDate);
+            }
+            
+            PrepareChartData();
+            
+            IsProductDataLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading product data: {ex.Message}");
+            IsProductDataLoaded = true;  
+            StateHasChanged();
+        }
+    }
+    
+    /// <summary>
+    /// Prepares the chart data for display based on the current time range.
+    /// </summary>
+    private void PrepareChartData()
+    {
+        FormattedLabels = new List<string>();
+        FormattedUnitsSoldData = new List<int>();
+        
+        if (CurrentTimeRange.RangeType == "month")
+        {
+            PrepareMonthlyData();
+        }
+        else // weekly
+        {
+            PrepareWeeklyData();
+        }
+    }
+    
+    /// <summary>
+    /// Prepares the monthly data for display.
+    /// It organizes the data by day of the month and formats the labels accordingly.
+    /// It adds 0 for days with no sales, so that a full month view is displayed.
+    /// </summary>
+    private void PrepareMonthlyData()
+    {
+        int year = CurrentTimeRange.StartDate.Year;
+        int month = CurrentTimeRange.StartDate.Month;
+        int daysInMonth = DateTime.DaysInMonth(year, month);
+        
+        var unitsByDay = new Dictionary<int, int>();
+        
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            unitsByDay[day] = 0;
+        }
+        
+        foreach (var sale in ProductSalesData)
+        {
+            if (sale.Date.Month == month && sale.Date.Year == year)
+            {
+                int day = sale.Date.Day;
+                unitsByDay[day] = sale.UnitsSold;
+            }
+        }
+        
+        ChartData.DateLabels.Clear();
+        
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            var date = new DateTime(year, month, day);
+            ChartData.DateLabels.Add(date);
+            FormattedLabels.Add(date.ToString("MMM dd"));
+            FormattedUnitsSoldData.Add(unitsByDay[day]);
+        }
+    }
+    
+    /// <summary>
+    /// Prepares the weekly data for display.
+    /// It adds 0 for days with no sales, so that a full week view is displayed.
+    /// </summary>
+    private void PrepareWeeklyData()
+    {
+        var startDate = CurrentTimeRange.StartDate; // monday
+        var endDate = CurrentTimeRange.EndDate;   // sunday
+        
+        var unitsByDay = new Dictionary<DateTime, int>();
+        
+        for (int day = 0; day < 7; day++)
+        {
+            var date = startDate.AddDays(day);
+            unitsByDay[date] = 0;
+        }
+        
+        foreach (var sale in ProductSalesData)
+        {
+            var saleDate = sale.Date.Date;
+            if (saleDate >= startDate && saleDate <= endDate)
+            {
+                unitsByDay[saleDate] = sale.UnitsSold;
+            }
+        }
+        
+        ChartData.DateLabels.Clear();
+        
+        for (int day = 0; day < 7; day++)
+        {
+            var date = startDate.AddDays(day);
+            ChartData.DateLabels.Add(date);
+            FormattedLabels.Add(date.ToString("ddd, MMM dd"));
+            FormattedUnitsSoldData.Add(unitsByDay[date]);
+        }
+    }
+    
+    /// <summary>
+    /// Gets the display string for the current time range.
+    /// It formats the date range based on the selected time range type (week or month).
+    /// </summary>
+    private string GetTimeRangeDisplay()
+    {
+        if (CurrentTimeRange.RangeType == "week")
+        {
+            int weekNumber = System.Globalization.ISOWeek.GetWeekOfYear(CurrentTimeRange.StartDate);
+            return $"{CurrentTimeRange.StartDate:MMM dd} - {CurrentTimeRange.EndDate:MMM dd, yyyy} (Week {weekNumber})";
+        }
+        else
+        {
+            var startMonth = CurrentTimeRange.StartDate;
+            var lastDay = DateTime.DaysInMonth(startMonth.Year, startMonth.Month);
+            return $"{startMonth:MMMM yyyy} ({startMonth.Month}/1 - {startMonth.Month}/{lastDay})";
+        }
+    }
+
+    private void SwitchToWeekView()
+    {
+        ChangeTimeRangeType("week");
+    }
+    
+    private void SwitchToMonthView()
+    {
+        ChangeTimeRangeType("month");
+    }
+
+    /// <summary>
+    /// Changes the time range type (week or month) and updates the start and end dates accordingly.
+    /// </summary>
+    private void ChangeTimeRangeType(string rangeType)
+    {
+        if (rangeType == CurrentTimeRange.RangeType)
+            return;
+            
+        CurrentTimeRange.RangeType = rangeType;
+        
+        var today = DateTime.Today;
+        
+        if (rangeType == "week")
+        {
+            int daysToSubtract = today.DayOfWeek == DayOfWeek.Sunday ? 6 : ((int)today.DayOfWeek - 1);
+            
+            var startOfWeek = today.AddDays(-daysToSubtract);
+            var endOfWeek = startOfWeek.AddDays(6);  
+            CurrentTimeRange.StartDate = startOfWeek;
+            CurrentTimeRange.EndDate = endOfWeek;
+        }
+        else
+        {
+            var startOfMonth = new DateTime(today.Year, today.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+            CurrentTimeRange.StartDate = startOfMonth;
+            CurrentTimeRange.EndDate = endOfMonth;
+        }
+        
+        if (!string.IsNullOrEmpty(SelectedProduct))
+        {
+            LoadProductSalesData();
+        }
+    }
+    
+    /// <summary>
+    /// Navigates to the previous time period based on the current time range.
+    /// It updates the start and end dates accordingly and reloads the product sales data.
+    /// </summary>
+    private void NavigateToPreviousPeriod()
+    {
+        var prevRange = DataService.Analytics.GetAdjacentTimeRange(
+            CurrentTimeRange.StartDate, 
+            CurrentTimeRange.EndDate, 
+            CurrentTimeRange.RangeType, 
+            false);
+            
+        CurrentTimeRange = prevRange;
+        
+        if (!string.IsNullOrEmpty(SelectedProduct))
+        {
+            LoadProductSalesData();
+        }
+    }
+    
+    /// <summary>
+    /// Navigates to the next time period based on the current time range.
+    /// It updates the start and end dates accordingly and reloads the product sales data.
+    /// </summary>
+    private void NavigateToNextPeriod()
+    {
+        var nextRange = DataService.Analytics.GetAdjacentTimeRange(
+            CurrentTimeRange.StartDate, 
+            CurrentTimeRange.EndDate, 
+            CurrentTimeRange.RangeType, 
+            true);
+            
+        CurrentTimeRange = nextRange;
+        
+        if (!string.IsNullOrEmpty(SelectedProduct))
+        {
+            LoadProductSalesData();
+        }
+    }
+}

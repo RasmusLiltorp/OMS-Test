@@ -1,0 +1,38 @@
+.sales-tile {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+}
+
+.sales-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.tile-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.2);
+}
+
+.topnav {
+    background-color: #1b1919;
+    overflow: hidden;
+  }
+  
+.topnav a {
+    float: left;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+  }
+
+.topnav a:hover {
+    background-color: #ddd;
+    color: black;
+}

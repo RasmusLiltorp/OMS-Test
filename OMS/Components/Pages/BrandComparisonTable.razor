@@ -1,0 +1,85 @@
+@using DTOs
+
+<div class="card mb-3">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <small class="mb-0">Brand Analytics Comparison</small>
+    </div>
+    <div class="card-body">
+        @if (BrandComparison.Count == 0)
+        {
+            <div class="text-center text-muted py-3">
+                <i class="bi bi-bar-chart" style="font-size: 2rem;"></i>
+                <p class="mt-2">Select date ranges and click "Apply" to view brand analytics</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Brand</th>
+                            <th>Units Sold (P1)</th>
+                            <th>Revenue (P1)</th>
+                            <th>Units Sold (P2)</th>
+                            <th>Revenue (P2)</th>
+                            <th>Units Diff.</th>
+                            <th>Revenue Diff.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var brand in BrandComparison.Take(4))
+                        {
+                            <tr>
+                                <td><strong>@brand.BrandName</strong></td>
+                                <td>@brand.Period1UnitsSold</td>
+                                <td>@brand.Period1Revenue.ToString("C")</td>
+                                <td>@brand.Period2UnitsSold</td>
+                                <td>@brand.Period2Revenue.ToString("C")</td>
+                                <td class="@GetDiffClass(brand.Period2UnitsSold - brand.Period1UnitsSold)">
+                                    @GetDiffPrefix(brand.Period2UnitsSold - brand.Period1UnitsSold)@(brand.Period2UnitsSold - brand.Period1UnitsSold)
+                                </td>
+                                <td class="@GetDiffClass(brand.Period2Revenue - brand.Period1Revenue)">
+                                    @GetDiffPrefix(brand.Period2Revenue - brand.Period1Revenue)@((brand.Period2Revenue - brand.Period1Revenue).ToString("C"))
+                                </td>
+                            </tr>
+                        }
+                        @if (BrandComparison.Count > 4)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <em>Showing 4 of @BrandComparison.Count brands. Refine your search to see specific results.</em>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<BrandAnalyticsComparerDTO> BrandComparison { get; set; } = new();
+    
+    private string GetDiffClass(decimal diff)
+    {
+        return diff > 0 ? "text-success" : (diff < 0 ? "text-danger" : "");
+    }
+
+    private string GetDiffClass(int diff)
+    {
+        return diff > 0 ? "text-success" : (diff < 0 ? "text-danger" : "");
+    }
+
+    private string GetDiffPrefix(decimal diff)
+    {
+        return diff > 0 ? "+" : "";
+    }
+
+    private string GetDiffPrefix(int diff)
+    {
+        return diff > 0 ? "+" : "";
+    }
+}

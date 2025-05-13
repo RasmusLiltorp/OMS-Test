@@ -1,0 +1,218 @@
+@page "/OMS/ModifyOrder"
+@using OMS_Services;
+@inject DataService DataService
+@rendermode InteractiveServer
+@using BlazorBootstrap
+@inject NavigationManager NavigationManager
+@using DTOs;
+
+<PageTitle>Modify Order</PageTitle>
+
+<div class="topnav">
+    <a href="./OMS/Manage">OMS</a>
+    <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+</div>
+
+<h3>Modify Existing Order</h3>
+
+<div class="mb-4">
+    <label class="form-label">Search & Select Order</label>
+    <AutoComplete TItem="OrderDTO" @bind-Value="selectedOrderId" DataProvider="SearchOrdersProvider"
+        PropertyName="OrderId" Placeholder="Search by order ID or customer name..." OnChanged="OnOrderSelected"
+        class="form-control" />
+</div>
+
+@if (selectedOrder != null)
+{
+    <EditForm Model="@selectedOrder" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Customer Name</label>
+            <InputText class="form-control" @bind-Value="selectedOrder.CustomerInfo.Name" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Order Date</label>
+            <InputDate class="form-control" @bind-Value="selectedOrder.Date" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Track & Trace</label>
+            <input type="text" class="form-control" @bind="trackingNumberValue" placeholder="e.g. T123456789DK" />
+        </div>
+
+        <h5>Products</h5>
+        @foreach (var lineElement in selectedOrder.LineElements)
+        {
+            <div class="mb-3 row">
+                <div class="col-4">
+                    <select class="form-select" value="@lineElement.ProductUuid"
+                        @onchange="(e) => OnProductChanged(e, lineElement)">
+                        <option disabled selected value="">Select product</option>
+                        @foreach (var product in DataService.Products)
+                        {
+                            <option value="@product.ProductID">@product.ProductName (@product.Price.ToString("C"))</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-2">
+                    <InputNumber class="form-control" @bind-Value="lineElement.Amount" min="1" />
+                </div>
+                <div class="col-3">
+                    <InputNumber class="form-control" @bind-Value="lineElement.Price" step="0.01" />
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(lineElement))">X</button>
+                </div>
+            </div>
+        }
+        <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
+
+
+        <div class="form-check mb-3">
+            <InputCheckbox class="form-check-input" @bind-Value="isShipped" />
+            <label class="form-check-label">Order Shipped</label>
+        </div>
+
+
+        <div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn btn-danger ms-2" @onclick="CancelOrder">Back</button>
+        </div>
+    </EditForm>
+}
+
+@if (showConfirmation)
+{
+    <div class="alert alert-success mt-3">Order updated successfully!</div>
+}
+
+@code {
+    private OrderDTO? selectedOrder;
+    private string? selectedOrderId;
+    private bool showConfirmation = false;
+    private string errorMessage = string.Empty;
+    private string trackingNumberValue = string.Empty;
+    private bool isShipped = false;
+
+    private async Task<AutoCompleteDataProviderResult<OrderDTO>>
+    SearchOrdersProvider(AutoCompleteDataProviderRequest<OrderDTO> request)
+    {
+        await Task.Delay(1); // tiny delay to simulate async
+        string input = request.Filter?.Value?.ToString() ?? "";
+        var results = DataService.OrderLines
+        .Where(o => o.OrderId.Contains(input, StringComparison.OrdinalIgnoreCase)
+        || (o.CustomerInfo?.Name?.Contains(input, StringComparison.OrdinalIgnoreCase) ?? false))
+        .ToList();
+
+        return new AutoCompleteDataProviderResult<OrderDTO>
+        {
+            Data = results,
+            TotalCount = results.Count
+        };
+    }
+
+    private void OnOrderSelected(OrderDTO selected)
+    {
+        selectedOrder = selected;
+        showConfirmation = false;
+        trackingNumberValue = string.Empty;
+
+        // Sync the checkbox: FulfillmentState 2 = shipped, 1 = not shipped
+        isShipped = selected.FulfillmentState == 2;
+    }
+
+    private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
+    {
+        var productIdStr = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(productIdStr))
+        {
+            var product = DataService.Products.FirstOrDefault(p => p.ProductID == productIdStr);
+            if (product != null)
+            {
+                item.ProductUuid = productIdStr;
+                item.Price = product.Price;
+
+                if (item.Amount < 1)
+                {
+                    item.Amount = 1;
+                }
+
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void AddProduct()
+    {
+        if (selectedOrder?.LineElements is not null)
+        {
+            selectedOrder.LineElements.Add(new LineElementDTO
+            {
+                ProductUuid = "",
+                Amount = 1,
+                Price = 0.00M
+            });
+
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveProduct(LineElementDTO item)
+    {
+        if (selectedOrder?.LineElements is not null)
+        {
+            selectedOrder.LineElements.Remove(item);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (selectedOrder == null)
+            return;
+
+        // Compute total
+        selectedOrder.TotalCost = selectedOrder.LineElements
+        .Sum(e => e.Price * e.Amount);
+
+        // Apply tracking if provided
+        if (!string.IsNullOrWhiteSpace(trackingNumberValue))
+            (selectedOrder.ShippingInfo ??= new ShippingInfoDTO())
+            .TrackingNumber = trackingNumberValue;
+
+        // Apply shipped status if needed (convert bool to fulfillment state)
+        selectedOrder.FulfillmentState = isShipped ? 2 : 1;
+
+        showConfirmation = false;
+        errorMessage = "";
+
+        try
+        {
+            if (await DataService.UpdateOrderAsync(selectedOrder))
+            {
+                await DataService.InitializeDataAsync();
+                selectedOrder = DataService.OrderLines
+                .FirstOrDefault(o => o.OrderId == selectedOrder.OrderId);
+                showConfirmation = true;
+            }
+            else
+            {
+                errorMessage = "Failed to update order on the server.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+
+    private async Task CancelOrder()
+    {
+        await DataService.InitializeDataAsync();
+        NavigationManager.NavigateTo("/OMS/Manage", forceLoad: true);
+    }
+}

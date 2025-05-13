@@ -9,11 +9,55 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Components\Pages\" />
+      <PackageReference Include="Blazor.Bootstrap" Version="3.3.1" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blazor.Bootstrap" Version="3.3.1" />
+      <_ContentIncludedByDefault Remove="Components\App.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\MainLayout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\NavMenu.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\BrandAnalyticsFilter.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\BrandComparisonTable.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\BrandInsights.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\CategoryComparisonTable.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\CreateOrder.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ModifyOrder.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\OMS.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\OMSLanding.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\OrderDetails.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\OrderHistory.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProductAnalytics.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProductPerfomance.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProductStatisticsPanel.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Receipt.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SalesReportsOverview.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Stock.razor" />
+      <_ContentIncludedByDefault Remove="Components\Routes.razor" />
+      <_ContentIncludedByDefault Remove="Components\_Imports.razor" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\App.razor" />
+      <AdditionalFiles Include="Components\Layout\MainLayout.razor" />
+      <AdditionalFiles Include="Components\Layout\NavMenu.razor" />
+      <AdditionalFiles Include="Components\Pages\BrandAnalyticsFilter.razor" />
+      <AdditionalFiles Include="Components\Pages\BrandComparisonTable.razor" />
+      <AdditionalFiles Include="Components\Pages\BrandInsights.razor" />
+      <AdditionalFiles Include="Components\Pages\CategoryComparisonTable.razor" />
+      <AdditionalFiles Include="Components\Pages\CreateOrder.razor" />
+      <AdditionalFiles Include="Components\Pages\ModifyOrder.razor" />
+      <AdditionalFiles Include="Components\Pages\OMS.razor" />
+      <AdditionalFiles Include="Components\Pages\OMSLanding.razor" />
+      <AdditionalFiles Include="Components\Pages\OrderDetails.razor" />
+      <AdditionalFiles Include="Components\Pages\OrderHistory.razor" />
+      <AdditionalFiles Include="Components\Pages\ProductAnalytics.razor" />
+      <AdditionalFiles Include="Components\Pages\ProductPerfomance.razor" />
+      <AdditionalFiles Include="Components\Pages\ProductStatisticsPanel.razor" />
+      <AdditionalFiles Include="Components\Pages\Receipt.razor" />
+      <AdditionalFiles Include="Components\Pages\SalesReportsOverview.razor" />
+      <AdditionalFiles Include="Components\Pages\Stock.razor" />
+      <AdditionalFiles Include="Components\Routes.razor" />
+      <AdditionalFiles Include="Components\_Imports.razor" />
     </ItemGroup>
 
 </Project>

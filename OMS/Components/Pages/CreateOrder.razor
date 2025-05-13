@@ -1,0 +1,259 @@
+@page "/OMS/CreateOrder"
+@using BlazorBootstrap
+@using OMS_Services
+@inject DataService DataService
+@using System.Text.Json
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@using DTOs
+
+<PageTitle>Create Order</PageTitle>
+
+<div class="topnav">
+    <a href="./OMS/Manage">OMS</a>
+    <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+    <a href="./OMS/Stock">Stock</a>
+</div>
+
+<h3>Create New Order</h3>
+
+<EditForm Model="@newOrder" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Customer Name</label>
+        <InputText class="form-control" @bind-Value="newOrder.CustomerInfo.Name" />
+    </div>
+
+    <div>
+        <label class="=form-label">Address</label>
+        <InputText class="form-control" @bind-Value="newOrder.ShippingInfo.Address1" />
+    </div>
+
+    <div>
+        <label class="=form-label">Address 2 (optional)</label>
+        <InputText class="form-control" @bind-Value="newOrder.ShippingInfo.Address2" />
+    </div>
+
+    <div>
+        <label class="=form-label">Zipcode</label>
+        <InputNumber class="form-control" @bind-Value="newOrder.ShippingInfo.ZipcodeId" />
+    </div>
+
+
+    <div>
+        <label class="form-label">Country</label>
+        <InputNumber class="form-control" @bind-Value="newOrder.ShippingInfo.CountryId" />
+    </div>
+
+    <h5>Products</h5>
+    @foreach (var item in newOrder.LineElements)
+    {
+        <div class="mb-3 row">
+            <div class="col-4">
+                <select class="form-select" value="@item.ProductUuid" @onchange="(e) => OnProductChanged(e, item)">
+                    <option disabled selected value="">Select product</option>
+                    @foreach (var product in DataService.Products)
+                    {
+                        <option value="@product.ProductID">
+                            @product.ProductName (@product.Price.ToString("C"))
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-2">
+                <InputNumber class="form-control" @bind-Value="item.Amount" min="1" />
+            </div>
+            <div class="col-3">
+                <InputNumber class="form-control" @bind-Value="item.Price" step="0.01" />
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger" @onclick="@(() => RemoveProduct(item))">X</button>
+            </div>
+        </div>
+    }
+
+    <button type="button" class="btn btn-secondary mb-3" @onclick="AddProduct">+ Add Product</button>
+
+    <div>
+        <button type="button" class="btn btn-secondary mb-3 bg-success" @onclick="OpenSendPaymentModal">Send
+            payment</button>
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-primary" disabled="@(paymentLinkSent == false)">Submit</button>
+        <button type="button" class="btn btn-danger" @onclick="CancelOrder">Back</button>
+    </div>
+</EditForm>
+
+@if (showSendPaymentModal)
+{
+    <div class="modal show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Payment Link</h5>
+                    <button type="button" class="btn-close" @onclick="CloseSendPaymentModal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Email or Phone Number</label>
+                    <input class="form-control" @bind="paymentRecipient" placeholder="Enter email or phone..." />
+
+                    @if (!string.IsNullOrEmpty(paymentMessage))
+                    {
+                        <div class="alert alert-success mt-3">@paymentMessage</div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseSendPaymentModal">Cancel</button>
+                    <button class="btn btn-success" @onclick="SendPaymentLink"
+                        disabled="@string.IsNullOrWhiteSpace(paymentRecipient)">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (showConfirmation)
+{
+    <div class="alert alert-success mt-3">Order created successfully!</div>
+}
+
+@code {
+    private bool showSendPaymentModal = false;
+    private string paymentRecipient = string.Empty;
+    private string paymentMessage = string.Empty;
+    private bool paymentLinkSent = false;
+    private OrderDTO newOrder = new OrderDTO
+    {
+        OrderId = Guid.NewGuid().ToString(),
+        CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },
+        ShippingInfo = new ShippingInfoDTO(),
+        LineElements = new List<LineElementDTO>(),
+        Date = DateTime.Today
+    };
+    private bool showConfirmation = false;
+
+    private void AddProduct()
+    {
+        newOrder.LineElements.Add(new LineElementDTO
+        {
+            ProductUuid = "1",
+            Amount = 1,
+            Price = 0
+        });
+        StateHasChanged();
+    }
+
+    private void RemoveProduct(LineElementDTO product)
+    {
+        newOrder.LineElements.Remove(product);
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        newOrder.CustomerInfo = new CustomerInfoDTO { Name = newOrder.CustomerInfo.Name, CustomerId = Guid.NewGuid().ToString() };
+
+        if (newOrder.ShippingInfo == null)
+        {
+            newOrder.ShippingInfo = new ShippingInfoDTO();
+        }
+
+        decimal totalCost = 0;
+        foreach (var item in newOrder.LineElements)
+        {
+            totalCost += item.Price * item.Amount;
+        }
+        newOrder.TotalCost = totalCost;
+
+        Guid orderId = Guid.NewGuid();
+
+        if (newOrder.ShippingInfo.Address2 == null)
+        {
+            newOrder.ShippingInfo.Address2 = "";
+        }
+
+        var result = await DataService.ApiService.PostOrderLineToBackend(newOrder);
+
+        showConfirmation = true;
+
+        ResetOrderForm();
+
+        await DataService.InitializeDataAsync();
+        StateHasChanged();
+    }
+
+    private void ResetOrderForm()
+    {
+        newOrder = new OrderDTO
+        {
+            OrderId = Guid.NewGuid().ToString(),
+            CustomerInfo = new CustomerInfoDTO { Name = "", CustomerId = Guid.NewGuid().ToString() },
+            ShippingInfo = new ShippingInfoDTO(),
+            LineElements = new List<LineElementDTO>(),
+            Date = DateTime.Today
+        };
+        paymentLinkSent = false;
+    }
+
+
+    private void OnProductChanged(ChangeEventArgs e, LineElementDTO item)
+    {
+        var selectedValueStr = e.Value?.ToString();
+
+        if (!string.IsNullOrEmpty(selectedValueStr))
+        {
+            var product = DataService.Products.FirstOrDefault(p => p.ProductID == selectedValueStr);
+
+            if (product != null)
+            {
+                item.ProductUuid = selectedValueStr;
+                item.Price = product.Price;
+                if (item.Amount < 1)
+                {
+                    item.Amount = 1;
+                }
+            }
+            else
+            {
+                item.ProductUuid = "1";
+                item.Price = 0;
+            }
+        }
+        else
+        {
+            item.ProductUuid = "1";
+            item.Price = 0;
+        }
+
+        StateHasChanged();
+    }
+
+    private void CancelOrder()
+    {
+        NavigationManager.NavigateTo("/OMS/Manage");
+    }
+
+    private void OpenSendPaymentModal()
+    {
+        paymentRecipient = string.Empty;
+        paymentMessage = string.Empty;
+        showSendPaymentModal = true;
+    }
+
+    private void CloseSendPaymentModal()
+    {
+        showSendPaymentModal = false;
+    }
+
+    private void SendPaymentLink()
+    {
+        if (!string.IsNullOrWhiteSpace(paymentRecipient))
+        {
+            paymentMessage = $"Payment link sent to {paymentRecipient}";
+            paymentLinkSent = true;
+        }
+    }
+}

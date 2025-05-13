@@ -1,0 +1,135 @@
+@page "/oms/order/{OrderId}"
+@using BlazorBootstrap
+@using OMS_Services
+@inject DataService DataService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@using DTOs
+
+<PageTitle>Order Details</PageTitle>
+
+<div class="topnav">
+    <a href="./OMS/Manage">OMS</a>
+    <a href="../OMS/SalesReportsOverview">Sales Reports</a>
+    <a href="./OMS/Stock">Stock</a>
+</div>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Order Details</h3>
+
+            @if (order != null)
+            {
+                <div class="card p-3" style="min-height: 200px;">
+                    <p><strong>Order:</strong> @order.OrderId</p>
+                    <p><strong>Customer:</strong> @order.CustomerInfo.Name</p>
+                    <p><strong>Date:</strong> @order.Date.ToString("dd MMM yyyy")</p>
+                    <p><strong>Total Amount:</strong> @DataService.CalculateOrdertotal(order).ToString("0.00") DKK</p>
+
+                    @if (!string.IsNullOrWhiteSpace(TrackingPlaceholder))
+                    {
+                        <p>
+                            <strong>Track:</strong>
+                            <a href="https://www.postnord.dk/varktojer/track-trace?shipmentId=@TrackingPlaceholder"
+                                target="_blank">
+                                @TrackingPlaceholder
+                            </a>
+                        </p>
+                    }
+                    else
+                    {
+                        <p><strong>Track:</strong> N/A</p>
+                    }
+                    
+                    <p>
+                        <strong>Shipment Status:</strong>
+                        @(isOrderShipped ? "Shipped" : "Not Shipped")
+                    </p>
+                </div>
+            }
+            else
+            {
+                <p class="text-danger">Order not found!</p>
+            }
+        </div>
+
+        <div class="col-md-6">
+            <h3>Products in Order</h3>
+
+            @if (order != null && order.LineElements.Any())
+            {
+                <div class="card p-3" style="min-height: 200px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lineElement in order.LineElements)
+                            {
+                                var product = DataService.Products?.FirstOrDefault(p => p.ProductID == lineElement.ProductUuid);
+                                <tr>
+                                    <td>@lineElement.ProductUuid</td>
+                                    <td>@(product?.ProductName ?? "Unknown")</td>
+                                    <td>@lineElement.Amount</td>
+                                    <td>@(lineElement?.Price.ToString("0.00") ?? "0.00") DKK</td>
+                                    <td>@((Convert.ToDecimal(lineElement?.Price) *
+                                                                        Convert.ToDecimal(lineElement?.Amount)).ToString("0.00")) DKK</td>
+                        </tr>
+                                                }
+                            <tr class="table">
+                                <td colspan="4" class="text-end"><strong>Order Total:</strong></td>
+                                <td><strong>@(DataService.CalculateOrdertotal(order).ToString("0.00")) DKK</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <strong>No products in this order.</strong>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+
+    public string TrackingPlaceholder = "123456789";
+    private bool isOrderShipped = false;
+
+    [Parameter]
+    public string? OrderId { get; set; }
+
+    private OrderDTO? order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = DataService.OrderLines?.FirstOrDefault(o => o.OrderId == OrderId);
+
+        if (OrderId != null)
+        {
+            order = DataService.GetOrderById(OrderId);
+
+            if (order != null)
+            {
+                isOrderShipped = DataService.IsOrderFulfilled(order.OrderId);
+
+                TrackingPlaceholder = order.ShippingInfo?.TrackingNumber ?? string.Empty;
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Order {OrderId} not found in DataService.");
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+
+    }
+}

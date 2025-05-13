@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <SupportedPlatform Include="browser" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Blazor.Bootstrap" Version="3.3.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Components\App.razor" />
+      <AdditionalFiles Include="Components\Layout\MainLayout.razor" />
+      <AdditionalFiles Include="Components\Layout\NavMenu.razor" />
+      <AdditionalFiles Include="Components\Pages\BrandAnalyticsFilter.razor" />
+      <AdditionalFiles Include="Components\Pages\BrandComparisonTable.razor" />
+      <AdditionalFiles Include="Components\Pages\BrandInsights.razor" />
+      <AdditionalFiles Include="Components\Pages\CategoryComparisonTable.razor" />
+      <AdditionalFiles Include="Components\Pages\CreateOrder.razor" />
+      <AdditionalFiles Include="Components\Pages\ModifyOrder.razor" />
+      <AdditionalFiles Include="Components\Pages\OMS.razor" />
+      <AdditionalFiles Include="Components\Pages\OMSLanding.razor" />
+      <AdditionalFiles Include="Components\Pages\OrderDetails.razor" />
+      <AdditionalFiles Include="Components\Pages\OrderHistory.razor" />
+      <AdditionalFiles Include="Components\Pages\ProductAnalytics.razor" />
+      <AdditionalFiles Include="Components\Pages\ProductPerfomance.razor" />
+      <AdditionalFiles Include="Components\Pages\ProductStatisticsPanel.razor" />
+      <AdditionalFiles Include="Components\Pages\Receipt.razor" />
+      <AdditionalFiles Include="Components\Pages\SalesReportsOverview.razor" />
+      <AdditionalFiles Include="Components\Pages\Stock.razor" />
+      <AdditionalFiles Include="Components\Routes.razor" />
+    </ItemGroup>
+
+</Project>

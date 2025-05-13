@@ -1,0 +1,253 @@
+@page "/OMS/BrandInsights"
+@using BlazorBootstrap
+@using OMS_Services
+@using DTOs
+@inject DataService DataService
+@inject NavigationManager NavigationManager
+@inject IEmailService EmailService
+@rendermode InteractiveServer
+
+<PageTitle>Analytics</PageTitle>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<div class="topnav">
+    <a href="./OMS/Manage">OMS</a>
+    <a href="./OMS/SalesReportsOverview">Sales Reports</a>
+    <a href="./OMS/Stock">Stock</a>
+</div>
+
+<div class="container mt-4">
+    <h3>Analytics</h3>
+
+    <div class="text-center mb-3">
+        <div class="btn-group" role="group" aria-label="Analytics View Toggle">
+            <button type="button" class="btn @(activeView == "brands" ? "btn-primary" : "btn-outline-primary")" @onclick="SwitchToBrandsView">
+                <i class="bi bi-tag me-1"></i> Brands
+            </button>
+            <button type="button" class="btn @(activeView == "products" ? "btn-primary" : "btn-outline-primary")" @onclick="SwitchToProductsView">
+                <i class="bi bi-box me-1"></i> Product statistics
+            </button>
+        </div>
+    </div>
+
+    @if (activeView == "brands")
+    {
+        <BrandAnalyticsFilter 
+            FromDate1="@fromDate1"
+            ToDate1="@toDate1"
+            FromDate2="@fromDate2" 
+            ToDate2="@toDate2"
+            SelectedBrand="@selectedBrand"
+            SelectedCategory="@selectedCategory"
+            Brands="@allBrands"
+            Categories="@allCategories"
+            OnApplyFilters="HandleFiltersApplied" />
+            
+        <BrandComparisonTable BrandComparison="@brandComparison" />
+        
+        <CategoryComparisonTable CategoryComparison="@categoryComparison" />
+    }
+    else if (activeView == "products")
+    {
+        <ProductAnalytics Products="@allProducts" SelectedProduct="@selectedProduct" />
+    }
+</div>
+
+@code {
+    private DateOnly fromDate1 = new(2025, 4, 1);
+    private DateOnly toDate1 = new(2025, 4, 15);
+    private DateOnly fromDate2 = new(2025, 4, 16);
+    private DateOnly toDate2 = new(2025, 4, 30);
+    private string selectedBrand = "";
+    private string selectedCategory  = "";
+    private string activeView { get; set; } = "brands";
+    private string selectedProduct = "";
+
+    private List<string> allBrands = new();
+    private List<string> allCategories = new();
+    private List<ProductDTO> allProducts = new();
+    private List<BrandAnalyticsComparerDTO> brandComparison = new();
+    private List<CategoryComparisonDTO> categoryComparison = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        DataService.OrdersFetched += OrdersHasFetched;
+        return Task.CompletedTask;
+    }
+    
+    private void SwitchToBrandsView()
+    {
+        SwitchView("brands");
+    }
+
+    private void SwitchToProductsView()
+    {
+        SwitchView("products");
+    }
+    
+    private void SwitchView(string view)
+    {
+        activeView = view;
+        StateHasChanged();
+    }
+    /// <summary>
+    /// Compares two time periods for a specific brand using AnalyticsService throgh DataService.
+    /// If the brand is empty, it compares all brands.
+    /// </summary>
+    protected void CompareTwoTimePeriodsBrand(string brand, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
+    {
+        BrandComparisonDTO? firstPeriodData = null;
+        BrandComparisonDTO? secondPeriodData = null;
+        
+        var brandAnalyticsFirstPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate1, toDate1);
+        var brandAnalyticsSecondPeriod = DataService.Analytics.CompareBrandsInterval(brand, fromDate2, toDate2);
+                
+        if (string.IsNullOrEmpty(brand))
+        {
+            var allBrandNames = brandAnalyticsFirstPeriod.Keys
+                .Union(brandAnalyticsSecondPeriod.Keys)
+                .Distinct()
+                .ToList();
+                
+            foreach (var brandName in allBrandNames)
+            {
+                var analyticsData = new BrandAnalyticsComparerDTO
+                {
+                    BrandName = brandName,
+                    Period1UnitsSold = 0,
+                    Period1Revenue = 0,
+                    Period2UnitsSold = 0,
+                    Period2Revenue = 0
+                };
+                
+                if (brandAnalyticsFirstPeriod.TryGetValue(brandName, out firstPeriodData))
+                {
+                    analyticsData.Period1UnitsSold = firstPeriodData.PeriodUnitsSold;
+                    analyticsData.Period1Revenue = firstPeriodData.PeriodRevenue;
+                }
+                
+                if (brandAnalyticsSecondPeriod.TryGetValue(brandName, out secondPeriodData))
+                {
+                    analyticsData.Period2UnitsSold = secondPeriodData.PeriodUnitsSold;
+                    analyticsData.Period2Revenue = secondPeriodData.PeriodRevenue;
+                }
+                
+                brandComparison.Add(analyticsData);
+            }
+        }
+        else if (brandAnalyticsFirstPeriod.TryGetValue(brand, out firstPeriodData) || 
+                brandAnalyticsSecondPeriod.TryGetValue(brand, out secondPeriodData))
+        {
+            var brandAnalytics = new BrandAnalyticsComparerDTO
+            {
+                BrandName = brand,
+                Period1UnitsSold = firstPeriodData?.PeriodUnitsSold ?? 0,
+                Period1Revenue = firstPeriodData?.PeriodRevenue ?? 0,
+                Period2UnitsSold = secondPeriodData?.PeriodUnitsSold ?? 0,
+                Period2Revenue = secondPeriodData?.PeriodRevenue ?? 0
+            };
+            
+            brandComparison.Add(brandAnalytics);
+        }
+    }
+    
+    /// <summary>
+    /// Compares two time periods for a specific category using AnalyticsService throgh DataService.
+    /// If the category is empty, it compares all categories.
+    /// </summary>
+    protected void CompareTwoTimePeriodsCategory(string category, DateOnly fromDate1, DateOnly toDate1, DateOnly fromDate2, DateOnly toDate2)
+    {
+        CategoryPeriodDTO? firstPeriodData = null;
+        CategoryPeriodDTO? secondPeriodData = null;
+        
+        var categoryAnalyticsFirstPeriod = DataService.Analytics.CompareCategoriesInterval(category, fromDate1, toDate1);
+        var categoryAnalyticsSecondPeriod = DataService.Analytics.CompareCategoriesInterval(category, fromDate2, toDate2);
+        
+        if (string.IsNullOrEmpty(category))
+        {
+            var allCategoryNames = categoryAnalyticsFirstPeriod.Keys
+                .Union(categoryAnalyticsSecondPeriod.Keys)
+                .Distinct()
+                .ToList();
+                
+            foreach (var categoryName in allCategoryNames)
+            {
+                var analyticsData = new CategoryComparisonDTO
+                {
+                    CategoryName = categoryName,
+                    Period1UnitsSold = 0,
+                    Period1Revenue = 0,
+                    Period2UnitsSold = 0,
+                    Period2Revenue = 0
+                };
+                
+                if (categoryAnalyticsFirstPeriod.TryGetValue(categoryName, out firstPeriodData))
+                {
+                    analyticsData.Period1UnitsSold = firstPeriodData.PeriodUnitsSold;
+                    analyticsData.Period1Revenue = firstPeriodData.PeriodRevenue;
+                }
+                
+                if (categoryAnalyticsSecondPeriod.TryGetValue(categoryName, out secondPeriodData))
+                {
+                    analyticsData.Period2UnitsSold = secondPeriodData.PeriodUnitsSold;
+                    analyticsData.Period2Revenue = secondPeriodData.PeriodRevenue;
+                }
+                
+                categoryComparison.Add(analyticsData);
+            }
+        }
+        else if (categoryAnalyticsFirstPeriod.TryGetValue(category, out firstPeriodData) || 
+                categoryAnalyticsSecondPeriod.TryGetValue(category, out secondPeriodData))
+        {
+            var categoryAnalytics = new CategoryComparisonDTO
+            {
+                CategoryName = category,
+                Period1UnitsSold = firstPeriodData?.PeriodUnitsSold ?? 0,
+                Period1Revenue = firstPeriodData?.PeriodRevenue ?? 0,
+                Period2UnitsSold = secondPeriodData?.PeriodUnitsSold ?? 0,
+                Period2Revenue = secondPeriodData?.PeriodRevenue ?? 0
+            };
+            
+            categoryComparison.Add(categoryAnalytics);
+        }
+    }
+    
+    /// <summary>
+    /// Method to compare analytics for the selected brand and category.
+    /// </summary>
+    protected void CompareAnalytics()
+    {        
+        brandComparison.Clear();
+        categoryComparison.Clear();
+        
+        CompareTwoTimePeriodsBrand(selectedBrand, fromDate1, toDate1, fromDate2, toDate2);        
+        
+        CompareTwoTimePeriodsCategory(selectedCategory, fromDate1, toDate1, fromDate2, toDate2);
+        
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Event handler for when orders have been fetched.
+    /// </summary>
+    public void OrdersHasFetched(object? sender, EventArgs e){
+        allBrands = DataService.GetAllBrands();
+        allCategories = DataService.GetAllCategories();
+        allProducts = DataService.Products;
+        StateHasChanged();
+    }
+
+    private void HandleFiltersApplied(object filterData)
+    {
+        dynamic filters = filterData;
+        selectedBrand = filters.Brand;
+        selectedCategory = filters.Category;
+        fromDate1 = filters.FromDate1;
+        toDate1 = filters.ToDate1;
+        fromDate2 = filters.FromDate2;
+        toDate2 = filters.ToDate2;
+        
+        CompareAnalytics();
+    }
+}
