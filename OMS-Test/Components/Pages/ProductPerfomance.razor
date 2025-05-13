@@ -14,14 +14,15 @@
 <div class="topnav">
     <a href="../OMS/Manage">OMS</a>
     <a class="active" href="./OMS/SalesReportsOverview">Sales Reports</a>
+    <a href="./OMS/Stock">Stock</a>
 </div>
 
 <!-- Searchbar -->
 <div class="mb-3 mt-4 d-flex justify-content-center align-items-center">
-    <TextInput @bind-Value="@productId" style="width: 60%;"/>
+    <TextInput @bind-Value="@productId" style="width: 60%;" />
     <button class="btn btn-outline-primary ms-1" type="button" @onclick="PerformSearch">
-                    <i class="bi bi-search"></i>
-     </button>
+        <i class="bi bi-search"></i>
+    </button>
 </div>
 
 <!-- Search container -->
@@ -29,11 +30,13 @@
     <div class="d-flex align-items-center justify-content-center mb-3">
         <div class="d-flex align-items-center">
             <small class="me-2">From:</small>
-            <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="From Date" class="form-control-sm" style="width: 150px;" />
+            <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="From Date" class="form-control-sm"
+                style="width: 150px;" />
         </div>
         <div class="d-flex align-items-center ms-3">
             <small class="me-2">To:</small>
-            <DateInput TValue="DateOnly" @bind-Value="@toDate" Placeholder="To Date" class="form-control-sm" style="width: 150px;" />
+            <DateInput TValue="DateOnly" @bind-Value="@toDate" Placeholder="To Date" class="form-control-sm"
+                style="width: 150px;" />
         </div>
     </div>
     <div class="mt-2">
@@ -42,41 +45,41 @@
                 <small class="mb-0">Find orders based on product ID</small>
             </div>
             <div class="card-body">
-            @if(hasSearched == false)
-            {
-                <div class="text-center text-muted py-5">
-                    <i class="bi bi-search" style="font-size: 3rem;"></i>
-                    <p class="mt-3">Enter a product ID and click search to view results</p>
-                </div>
-            }
-            else if (searchResults.Count == 0)
-            {
-                <div class="text-center text-muted py-5">
-                    <i class="bi bi-emoji-frown" style="font-size: 3rem;"></i>
-                    <p class="mt-3">No results found for product ID: @searchText</p>
-                </div>
-            }
-            else
-            {
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Order Date</th>
-                        </tr>
-                    </thead>            
-                    <tbody>
-                        @foreach (var order in searchResults)
-                        {
-                            <tr style="cursor: pointer" @onclick="() => NavigateToOrderDetails(order.OrderId)">
-                                <td><a href="/oms/order/@order.OrderId">@order.OrderId</a></td>
-                                <td>@order.CustomerInfo.Name</td>
-                                <td>@order.Date.ToString("yyyy-MM-dd")</td>
+                @if (hasSearched == false)
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-search" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Enter a product ID and click search to view results</p>
+                    </div>
+                }
+                else if (searchResults.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-emoji-frown" style="font-size: 3rem;"></i>
+                        <p class="mt-3">No results found for product ID: @searchText</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in searchResults)
+                            {
+                                <tr style="cursor: pointer" @onclick="() => NavigateToOrderDetails(order.OrderId)">
+                                    <td><a href="/oms/order/@order.OrderId">@order.OrderId</a></td>
+                                    <td>@order.CustomerInfo.Name</td>
+                                    <td>@order.Date.ToString("yyyy-MM-dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 }
             </div>
         </div>
@@ -108,11 +111,11 @@
         }
 
         searchResults = DataService.OrderLines
-            .Where(order => 
-                order.LineElements.Any(line => line.ProductUuid.ToString().Contains(productId, StringComparison.OrdinalIgnoreCase)) &&
-                order.Date >= fromDate.ToDateTime(TimeOnly.MinValue) &&
-                order.Date <= toDate.ToDateTime(TimeOnly.MaxValue))
-            .ToList();
+        .Where(order =>
+        order.LineElements.Any(line => line.ProductUuid.ToString().Contains(productId, StringComparison.OrdinalIgnoreCase)) &&
+        order.Date >= fromDate.ToDateTime(TimeOnly.MinValue) &&
+        order.Date <= toDate.ToDateTime(TimeOnly.MaxValue))
+        .ToList();
 
         StateHasChanged();
     }
@@ -122,7 +125,8 @@
         NavigationManager.NavigateTo($"/oms/order/{orderId}");
     }
 
-    public void OrdersHasFetched(object? sender, EventArgs e){
+    public void OrdersHasFetched(object? sender, EventArgs e)
+    {
         StateHasChanged();
     }
 }

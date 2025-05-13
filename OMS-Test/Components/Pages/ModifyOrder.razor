@@ -192,7 +192,6 @@
 
         try
         {
-            // Update and reload
             if (await DataService.UpdateOrderAsync(selectedOrder))
             {
                 await DataService.InitializeDataAsync();
@@ -217,26 +216,4 @@
         await DataService.InitializeDataAsync();
         NavigationManager.NavigateTo("/OMS/Manage", forceLoad: true);
     }
-
-    /*private async Task OnShippedChanged(ChangeEventArgs e)
-    {
-    if (selectedOrder == null)
-    return;
-
-    isShipped = (bool)e.Value!;
-
-    try
-    {
-    var response = await ApiService.FulfillOrderAsync(selectedOrder.OrderId);
-    if (response?.Status != "Success")
-    {
-    errorMessage = "Failed to update fulfillment status.";
-    }
-    }
-    catch (Exception ex)
-    {
-    errorMessage = $"Error: {ex.Message}";
-    }
-    }*/
-
 }
