@@ -2,7 +2,6 @@
 @using BlazorBootstrap
 @using OMS_Services
 @inject DataService DataService
-@inject ApiService ApiService
 @using System.Text.Json
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
@@ -176,7 +175,7 @@
             newOrder.ShippingInfo.Address2 = "";
         }
 
-        var result = await ApiService.PostOrderLineToBackend(newOrder);
+        var result = await DataService.ApiService.PostOrderLineToBackend(newOrder);
 
         showConfirmation = true;
 

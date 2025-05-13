@@ -152,7 +152,6 @@ public class AnalyticsService
                 categoryData.PeriodRevenue += lineItem.Price * lineItem.Amount;
             }
         }
-        
         return categoryResults;    
     }
 
