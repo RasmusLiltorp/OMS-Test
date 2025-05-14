@@ -1,0 +1,56 @@
+# Ignore Visual Studio specific files
+.vs/
+*.user
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+
+# Ignore build outputs
+bin/
+obj/
+out/
+
+# Ignore dependencies
+packages/
+!packages/build/
+
+# Ignore NuGet cache and logs
+**/project.lock.json
+**/project.assets.json
+**/packages.lock.json
+nuget.config
+artifacts/
+
+# Ignore logs, database, and other generated files
+logs/
+*.log
+App_Data/
+
+# Ignore environment-specific files
+appsettings.Development.json
+secrets.json
+.env
+
+# Ignore Rider and JetBrains IDE files
+.idea/
+*.sln.iml
+
+# Ignore Resharper files
+*.DotSettings.user
+
+# Ignore Azure related files
+Azure/*
+
+# Ignore Docker files
+**/docker-compose.override.yml
+**/docker-compose.*.yml
+**/Dockerfile*
+
+# Ignore node modules and front-end dependencies
+node_modules/
+yarn.lock
+package-lock.json
+
+# MacOS
+**/.DS_STORE
